@@ -6,7 +6,7 @@ using System.Text;
 
 namespace InterStyle.Leads.Domain;
 
-public sealed class Lead: AggregateRoot<LeadId>
+public sealed class Lead : AggregateRoot<LeadId>
 {
     // For EF
     private Lead()
@@ -15,11 +15,12 @@ public sealed class Lead: AggregateRoot<LeadId>
 
     private Lead(
         LeadId id,
-        string customerName,
+        CustomerName customerName,
         PhoneNumber phoneNumber,
         LeadServiceType serviceType,
         LeadStatus status,
         LeadRequestDetails requestDetails,
+        LeadSource leadSource,
         DateTimeOffset createdAtUtc,
         DateTimeOffset updatedAtUtc)
         : base(id)
@@ -29,6 +30,7 @@ public sealed class Lead: AggregateRoot<LeadId>
         ServiceType = serviceType;
         Status = status;
         RequestDetails = requestDetails;
+        Source = leadSource;
         CreatedAtUtc = createdAtUtc;
         UpdatedAtUtc = updatedAtUtc;
     }
@@ -38,6 +40,7 @@ public sealed class Lead: AggregateRoot<LeadId>
     public LeadServiceType ServiceType { get; private set; } = LeadServiceType.Consultation;
     public LeadStatus Status { get; private set; } = LeadStatus.New;
     public LeadRequestDetails RequestDetails { get; private set; } = LeadRequestDetails.Empty();
+    public LeadSource Source { get; private set; } = LeadSource.Unknown;
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
 
@@ -47,6 +50,7 @@ public sealed class Lead: AggregateRoot<LeadId>
         PhoneNumber phoneNumber,
         LeadServiceType serviceType,
         LeadRequestDetails requestDetails,
+        LeadSource source,
         DateTimeOffset createdAtUtc)
     {
         if (customerName == default)
@@ -64,11 +68,12 @@ public sealed class Lead: AggregateRoot<LeadId>
 
         var lead = new Lead(
             id: LeadId.New(),
-            customerName: customerName.Trim(),
+            customerName: customerName,
             phoneNumber: phoneNumber,
             serviceType: serviceType,
             status: LeadStatus.New,
             requestDetails: requestDetails,
+            leadSource: source,
             createdAtUtc: createdAtUtc,
             updatedAtUtc: createdAtUtc);
 
@@ -88,6 +93,7 @@ public sealed class Lead: AggregateRoot<LeadId>
         LeadServiceType serviceType,
         LeadStatus status,
         LeadRequestDetails requestDetails,
+        LeadSource source,
         DateTimeOffset createdAtUtc,
         DateTimeOffset updatedAtUtc)
     {
@@ -113,6 +119,7 @@ public sealed class Lead: AggregateRoot<LeadId>
             serviceType: serviceType,
             status: status,
             requestDetails: requestDetails,
+            leadSource: source,
             createdAtUtc: createdAtUtc,
             updatedAtUtc: updatedAtUtc);
     }

@@ -8,4 +8,12 @@
     <UserSecretsId>6987ee0c-2889-4135-8cde-df0330f3804d</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\InterStyle.Leads.Api\InterStyle.Leads.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.1" />
+  </ItemGroup>
+
 </Project>

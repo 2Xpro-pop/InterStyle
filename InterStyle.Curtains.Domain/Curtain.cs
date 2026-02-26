@@ -21,22 +21,22 @@ public sealed class Curtain: AggregateRoot<CurtainId>
 
     public CurtainName Name
     {
-        get;
+        get; private set;
     }
 
     public Description Description
     {
-        get; 
+        get; private set;
     }
 
     public PictureUrl PictureUrl
     {
-        get;
+        get; private set;
     }
 
     public PictureUrl PreviewUrl
     {
-        get;
+        get; private set;
     }
 
     public static Curtain Create(CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
@@ -46,6 +46,58 @@ public sealed class Curtain: AggregateRoot<CurtainId>
         curtain.AddDomainEvent(new CurtainCreatedDomainEvent(curtain.Id, DateTime.UtcNow));
 
         return curtain;
+    }
+
+    public void ChangeName(CurtainName newName)
+    {
+        if (Name == newName)
+        {
+            return;
+        }
+
+        var oldName = Name;
+        Name = newName;
+
+        AddDomainEvent(new CurtainNameChangedDomainEvent(Id, oldName, newName, DateTimeOffset.UtcNow));
+    }
+
+    public void ChangeDescription(Description newDescription)
+    {
+        if (Description == newDescription)
+        {
+            return;
+        }
+
+        var oldDescription = Description;
+        Description = newDescription;
+
+        AddDomainEvent(new CurtainDescriptionChangedDomainEvent(Id, oldDescription, newDescription, DateTimeOffset.UtcNow));
+    }
+
+    public void ChangePictureUrl(PictureUrl newPictureUrl)
+    {
+        if (PictureUrl == newPictureUrl)
+        {
+            return;
+        }
+
+        var oldPictureUrl = PictureUrl;
+        PictureUrl = newPictureUrl;
+
+        AddDomainEvent(new CurtainPictureChangedDomainEvent(Id, oldPictureUrl, newPictureUrl, DateTimeOffset.UtcNow));
+    }
+
+    public void ChangePreviewUrl(PictureUrl newPreviewUrl)
+    {
+        if (PreviewUrl == newPreviewUrl)
+        {
+            return;
+        }
+
+        var oldPreviewUrl = PreviewUrl;
+        PreviewUrl = newPreviewUrl;
+
+        AddDomainEvent(new CurtainPreviewChangedDomainEvent(Id, oldPreviewUrl, newPreviewUrl, DateTimeOffset.UtcNow));
     }
 
     internal static Curtain Rehydrate(CurtainId id, CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)

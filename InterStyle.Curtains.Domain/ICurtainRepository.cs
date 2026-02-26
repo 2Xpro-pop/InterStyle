@@ -10,5 +10,9 @@ public interface ICurtainRepository: IRepository<Curtain>
 {
     public Task<ImmutableArray<Curtain>> GetCurtainsAsync(CancellationToken cancellationToken = default);
 
+    public Task<Curtain?> GetByIdAsync(CurtainId id, CancellationToken cancellationToken = default);
+
     public Task<Curtain?> AddAsync(Curtain curtain, CancellationToken cancellationToken = default);
+
+    public void Update(Curtain curtain);
 }

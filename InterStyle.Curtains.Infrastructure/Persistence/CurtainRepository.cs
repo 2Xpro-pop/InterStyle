@@ -21,10 +21,21 @@ public sealed class CurtainRepository(CurtainsDbContext dbContext): ICurtainRepo
         return array.ToImmutableArrayUnsafe();
     }
 
+    public async Task<Curtain?> GetByIdAsync(CurtainId id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Set<Curtain>().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
     public async Task<Curtain?> AddAsync(Curtain curtain, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(curtain);
         var entry = await _dbContext.Set<Curtain>().AddAsync(curtain, cancellationToken);
         return entry.Entity;
+    }
+
+    public void Update(Curtain curtain)
+    {
+        ArgumentNullException.ThrowIfNull(curtain);
+        _dbContext.Set<Curtain>().Update(curtain);
     }
 }

@@ -9,12 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InterStyle.Curtains.Api\InterStyle.Curtains.Api.csproj" />
     <ProjectReference Include="..\InterStyle.Leads.Api\InterStyle.Leads.Api.csproj" />
     <ProjectReference Include="..\InterStyle.Reviews.Api\InterStyle.Reviews.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.PostgreSQL"/>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
 
 </Project>

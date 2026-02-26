@@ -18,6 +18,7 @@
 
 
 	<ItemGroup>
+		<ProjectReference Include="..\InterStyle.Curtains.Application\InterStyle.Curtains.Application.csproj" />
 		<ProjectReference Include="..\InterStyle.Curtains.Domain\InterStyle.Curtains.Domain.csproj" />
 		<ProjectReference Include="..\InterStyle.InfastructureShared\InterStyle.InfastructureShared.csproj" />
 	</ItemGroup>

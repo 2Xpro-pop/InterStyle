@@ -8,6 +8,7 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="InterStyle.AppHost/InterStyle.AppHost.csproj" Id="8cc97388-30cc-40d1-94aa-d5720a93aa79" />
+  <Project Path="InterStyle.Curtains.Domain/InterStyle.Curtains.Domain.csproj" Id="e39f4a2c-c1d9-4c35-ae55-219c5f9d08bc" />
   <Project Path="InterStyle.Leads.Api/InterStyle.Leads.Api.csproj" />
   <Project Path="InterStyle.Leads.Application/InterStyle.Leads.Application.csproj" Id="3a721c17-6fb0-45e3-a27c-553a3153dc1d" />
   <Project Path="InterStyle.Leads.Domain/InterStyle.Leads.Domain.csproj" Id="21864190-e8eb-4cf4-88f7-008dee7195d7" />

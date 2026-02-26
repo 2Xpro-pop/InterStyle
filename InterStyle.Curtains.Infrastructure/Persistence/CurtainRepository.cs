@@ -14,10 +14,17 @@ public sealed class CurtainRepository(CurtainsDbContext dbContext): ICurtainRepo
 
     public IUnitOfWork UnitOfWork => _dbContext;
 
-    public async Task<ImmutableArray<Curtain>> GetCurtainsAsync()
+    public async Task<ImmutableArray<Curtain>> GetCurtainsAsync(CancellationToken cancellationToken = default)
     {
-        var array = await _dbContext.Set<Curtain>().ToArrayAsync();
+        var array = await _dbContext.Set<Curtain>().ToArrayAsync(cancellationToken);
 
         return array.ToImmutableArrayUnsafe();
+    }
+
+    public async Task<Curtain?> AddAsync(Curtain curtain, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(curtain);
+        var entry = await _dbContext.Set<Curtain>().AddAsync(curtain, cancellationToken);
+        return entry.Entity;
     }
 }

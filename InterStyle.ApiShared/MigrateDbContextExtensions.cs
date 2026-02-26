@@ -1,9 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using InterStyle.Leads.Api;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace InterStyle.Leads.Api;
+namespace InterStyle.ApiShared;
 
-internal static class MigrateDbContextExtensions
+public static class MigrateDbContextExtensions
 {
     private static readonly string ActivitySourceName = "DbMigrations";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);

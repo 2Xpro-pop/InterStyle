@@ -1,8 +1,19 @@
 <Solution>
+  <Folder Name="/Shared/">
+    <Project Path="InterStyle.ApiShared/InterStyle.ApiShared.csproj" Id="61fd7f9e-dd42-4aca-a0bb-c6e535ad45c4" />
+    <Project Path="InterStyle.InfastructureShared/InterStyle.InfastructureShared.csproj" Id="a890037e-ff76-422d-877c-331e87dbc1fa" />
+    <Project Path="InterStyle.Shared/InterStyle.Shared.csproj" Id="8a932dfb-da38-4b41-aeae-981a10bc73f4" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Project Path="InterStyle.AppHost/InterStyle.AppHost.csproj" Id="8cc97388-30cc-40d1-94aa-d5720a93aa79" />
   <Project Path="InterStyle.Leads.Api/InterStyle.Leads.Api.csproj" />
   <Project Path="InterStyle.Leads.Application/InterStyle.Leads.Application.csproj" Id="3a721c17-6fb0-45e3-a27c-553a3153dc1d" />
   <Project Path="InterStyle.Leads.Domain/InterStyle.Leads.Domain.csproj" Id="21864190-e8eb-4cf4-88f7-008dee7195d7" />
   <Project Path="InterStyle.Leads.Infrastructure/InterStyle.Leads.Infrastructure.csproj" Id="4aff1203-9d70-49d0-9a73-8fa6405f2ac9" />
-  <Project Path="InterStyle.Shared/InterStyle.Shared.csproj" Id="8a932dfb-da38-4b41-aeae-981a10bc73f4" />
+  <Project Path="InterStyle.Reviews.Api/InterStyle.Reviews.Api.csproj" />
+  <Project Path="InterStyle.Reviews.Application/InterStyle.Reviews.Application.csproj" />
+  <Project Path="InterStyle.Reviews.Domain/InterStyle.Reviews.Domain.csproj" Id="fc59b141-ec90-4941-8eaa-cc8071908805" />
+  <Project Path="InterStyle.Reviews.Infrastructure/InterStyle.Reviews.Infrastructure.csproj" />
 </Solution>

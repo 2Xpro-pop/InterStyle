@@ -1,0 +1,22 @@
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace InterStyle.ApiShared;
+
+public static class SwaggerExtensions
+{
+    public static void AddSwagger(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+    }
+
+    public static void UseSwaggerDefaults(this WebApplication app)
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+}

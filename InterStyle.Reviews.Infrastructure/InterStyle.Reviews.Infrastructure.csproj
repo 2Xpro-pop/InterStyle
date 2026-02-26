@@ -17,9 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\InterStyle.InfastructureShared\InterStyle.InfastructureShared.csproj" />
-		<ProjectReference Include="..\InterStyle.Leads.Application\InterStyle.Leads.Application.csproj" />
-		<ProjectReference Include="..\InterStyle.Leads.Domain\InterStyle.Leads.Domain.csproj" />
+		<ProjectReference Include="..\InterStyle.Reviews.Application\InterStyle.Reviews.Application.csproj" />
+		<ProjectReference Include="..\InterStyle.Reviews.Domain\InterStyle.Reviews.Domain.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,18 +1,18 @@
-﻿using InterStyle.Leads.Domain;
-using InterStyle.Shared;
+﻿using InterStyle.Shared;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace InterStyle.Leads.Infrastructure.Persistence;
+namespace InterStyle.InfastructureShared;
 
-static class MediatorExtension
+public static class MediatorExtension
 {
-    public static async Task DispatchDomainEventsAsync(this IMediator mediator, LeadsDbContext context)
+    public static async Task DispatchDomainEventsAsync(this IMediator mediator, DbContext context)
     {
         var domainEntities = context.ChangeTracker
-            .Entries<Lead>()
+            .Entries<IAggregateRoot>()
             .Where(x => x.Entity.DomainEvents != null && x.Entity.DomainEvents.Count != 0);
 
         var domainEvents = domainEntities

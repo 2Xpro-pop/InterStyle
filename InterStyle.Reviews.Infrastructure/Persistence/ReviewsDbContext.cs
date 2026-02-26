@@ -1,39 +1,57 @@
-﻿using InterStyle.InfastructureShared;
+using InterStyle.Reviews.Domain;
 using InterStyle.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
-using System.Reflection.Emit;
 
-namespace InterStyle.Leads.Infrastructure.Persistence;
+namespace InterStyle.Reviews.Infrastructure.Persistence;
 
-public sealed class LeadsDbContext(DbContextOptions<LeadsDbContext> options, IMediator mediator) : DbContext(options), IUnitOfWork
+/// <summary>
+/// EF Core DbContext for the Reviews bounded context.
+/// Implements IUnitOfWork for write-side operations.
+/// </summary>
+public sealed class ReviewsDbContext(DbContextOptions<ReviewsDbContext> options, IMediator mediator)
+    : DbContext(options), IUnitOfWork
 {
     private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     private IDbContextTransaction? _currentTransaction;
 
+    /// <summary>
+    /// Gets a value indicating whether there is an active transaction.
+    /// </summary>
     public bool HasActiveTransaction => _currentTransaction is not null;
 
+    /// <summary>
+    /// Gets the current transaction if any.
+    /// </summary>
     public IDbContextTransaction? GetCurrentTransaction() => _currentTransaction;
 
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("leads");
-        modelBuilder.ApplyConfiguration(new LeadEntityTypeConfiguration());
+        modelBuilder.HasDefaultSchema("reviews");
+        modelBuilder.ApplyConfiguration(new ReviewEntityTypeConfiguration());
     }
 
+    /// <summary>
+    /// Saves entities and dispatches domain events.
+    /// </summary>
     public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
     {
         await _mediator.DispatchDomainEventsAsync(this);
-
         _ = await base.SaveChangesAsync(cancellationToken);
         return true;
     }
 
+    /// <inheritdoc />
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => base.SaveChangesAsync(cancellationToken);
 
+    /// <summary>
+    /// Begins a new database transaction.
+    /// </summary>
+    /// <returns>The transaction if started; null if one already exists.</returns>
     public async Task<IDbContextTransaction?> BeginTransactionAsync()
     {
         if (_currentTransaction is not null)
@@ -45,6 +63,11 @@ public sealed class LeadsDbContext(DbContextOptions<LeadsDbContext> options, IMe
         return _currentTransaction;
     }
 
+    /// <summary>
+    /// Commits the specified transaction.
+    /// </summary>
+    /// <param name="transaction">The transaction to commit.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task CommitTransactionAsync(IDbContextTransaction transaction, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(transaction);
@@ -74,6 +97,9 @@ public sealed class LeadsDbContext(DbContextOptions<LeadsDbContext> options, IMe
         }
     }
 
+    /// <summary>
+    /// Rolls back the current transaction.
+    /// </summary>
     public void RollbackTransaction()
     {
         try

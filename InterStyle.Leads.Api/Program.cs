@@ -1,4 +1,4 @@
-using InterStyle.Leads.Api;
+using InterStyle.ApiShared;
 using InterStyle.Leads.Application.Commands;
 using InterStyle.Leads.Application.Queries;
 using InterStyle.Leads.Domain;
@@ -23,6 +23,10 @@ builder.Services.AddDbContext<LeadsDbContext>(options =>
 
 builder.Services.AddMigration<LeadsDbContext>();
 
+var withApiVersioning = builder.Services.AddApiVersioning();
+
+builder.AddDefaultOpenApi(withApiVersioning);
+
 builder.Services.AddScoped<ILeadRepository, LeadRepository>();
 
 builder.Services.AddScoped<ILeadQueries, LeadQueries>();
@@ -32,20 +36,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerDefaults();
+app.UseHealthChecksDefaults();
 
-if (app.Environment.IsDevelopment())
-{
-    // All health checks must pass for app to be considered ready to accept traffic after starting
-    app.MapHealthChecks("/health");
-
-    // Only health checks tagged with the "live" tag must pass for app to be considered alive
-    app.MapHealthChecks("/alive", new HealthCheckOptions
-    {
-        Predicate = r => r.Tags.Contains("live")
-    });
-}
+app.UseDefaultOpenApi();
 
 app.MapPost("/leads", async (CreateLeadCommand command, IMediator mediator, CancellationToken ct) =>
 {

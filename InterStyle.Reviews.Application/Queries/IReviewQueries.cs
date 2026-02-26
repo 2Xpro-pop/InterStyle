@@ -47,8 +47,8 @@ public sealed record ReviewDto(
     int Rating,
     string Comment,
     bool IsApproved,
-    DateTimeOffset CreatedAtUtc,
-    DateTimeOffset? ApprovedAtUtc);
+    DateTime CreatedAtUtc,
+    DateTime? ApprovedAtUtc);
 
 /// <summary>
 /// DTO containing review statistics for a time period.

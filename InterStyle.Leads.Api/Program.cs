@@ -16,12 +16,10 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateLeadCommand>());
 
-builder.Services.AddDbContext<LeadsDbContext>(options =>
+builder.Services.AddDefaultDbContext<LeadsDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("leadsdb"));
 });
-
-builder.Services.AddMigration<LeadsDbContext>();
 
 var withApiVersioning = builder.Services.AddApiVersioning();
 

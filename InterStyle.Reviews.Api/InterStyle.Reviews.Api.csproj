@@ -22,4 +22,10 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\InterStyle.ApiShared\InterStyle.ApiShared.csproj" />
+	  <ProjectReference Include="..\InterStyle.Reviews.Application\InterStyle.Reviews.Application.csproj" />
+	  <ProjectReference Include="..\InterStyle.Reviews.Infrastructure\InterStyle.Reviews.Infrastructure.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,5 +1,6 @@
 using InterStyle.ApiShared;
 using InterStyle.ApiShared.Events;
+using InterStyle.ImageApi;
 using InterStyle.ImageApi.Application.Commands.OptimizeImage;
 using InterStyle.ImageApi.Application.Commands.UploadImage;
 using InterStyle.ImageApi.Application.Queries.GetImageStatus;
@@ -58,58 +59,9 @@ app.UseHealthChecksDefaults();
 
 app.UseDefaultOpenApi();
 
-app.MapGet("/images", () =>
-{
-    var assets = app.Environment.WebRootPath;
+var images = app.NewVersionedApi("Images");
 
-    var files = Directory.GetFiles(assets)
-        .Where(file => file.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                       file.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-                       file.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-                       file.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
-        .Select(Path.GetFileName)
-        .ToArray();
-
-    return files;
-});
-
-app.MapPost("/images", async (
-            IFormFile file,
-            UploadImageCommandHandler handler,
-            CancellationToken cancellationToken) =>
-{
-    await using var stream = file.OpenReadStream();
-
-    var result = await handler.Handle(
-        new UploadImageCommand(stream, file.FileName, file.ContentType),
-        cancellationToken);
-
-    return Results.Accepted($"/images/{result.ImageId}", result);
-}).DisableAntiforgery();
-
-app.MapGet("/images/{id:guid}/status", async (
-    Guid id,
-    GetImageStatusQueryHandler handler,
-    CancellationToken cancellationToken) =>
-{
-    return Results.Ok(await handler.Handle(
-        new GetImageStatusQuery(id),
-        cancellationToken));
-});
-
-app.MapGet("/images/{id:guid}", async (
-    Guid id,
-    GetOptimizedImageQueryHandler handler,
-    CancellationToken cancellationToken) =>
-{
-    var result = await handler.Handle(
-        new GetOptimizedImageQuery(id),
-        cancellationToken);
-
-    return result is null
-        ? Results.NotFound()
-        : Results.File(result, "image/jpeg");
-});
+images.MapImageApiV1();
 
 app.Run();
 

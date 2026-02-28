@@ -1,21 +1,25 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.1.2">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <UserSecretsId>6987ee0c-2889-4135-8cde-df0330f3804d</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UserSecretsId>6987ee0c-2889-4135-8cde-df0330f3804d</UserSecretsId>
+		<!-- Exclude from Central Package Management -->
+		<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\InterStyle.Curtains.Api\InterStyle.Curtains.Api.csproj" />
-    <ProjectReference Include="..\InterStyle.Leads.Api\InterStyle.Leads.Api.csproj" />
-    <ProjectReference Include="..\InterStyle.Reviews.Api\InterStyle.Reviews.Api.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\InterStyle.Curtains.Api\InterStyle.Curtains.Api.csproj" />
+		<ProjectReference Include="..\InterStyle.ImageApi\InterStyle.ImageApi.csproj" />
+		<ProjectReference Include="..\InterStyle.Leads.Api\InterStyle.Leads.Api.csproj" />
+		<ProjectReference Include="..\InterStyle.Reviews.Api\InterStyle.Reviews.Api.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
+		<PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.1.2" />
+	</ItemGroup>
 
 </Project>

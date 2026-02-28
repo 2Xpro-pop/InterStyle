@@ -10,10 +10,10 @@ namespace InterStyle.Leads.Domain;
 /// </summary>
 public sealed class LeadServiceType : Enumeration
 {
-    public static readonly LeadServiceType Consultation = new(1, nameof(Consultation));
-    public static readonly LeadServiceType Measurement = new(2, nameof(Measurement));
-    public static readonly LeadServiceType Sewing = new(3, nameof(Sewing));
-    public static readonly LeadServiceType Installation = new(4, nameof(Installation));
+    public static readonly LeadServiceType Consultation = new(0, nameof(Consultation));
+    public static readonly LeadServiceType Measurement = new(1, nameof(Measurement));
+    public static readonly LeadServiceType Sewing = new(2, nameof(Sewing));
+    public static readonly LeadServiceType Installation = new(3, nameof(Installation));
 
     private LeadServiceType(int id, string name) : base(id, name)
     {

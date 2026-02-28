@@ -5,6 +5,7 @@
     <Project Path="InterStyle.Shared/InterStyle.Shared.csproj" Id="8a932dfb-da38-4b41-aeae-981a10bc73f4" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="C:/Users/Asanov/Downloads/sixlabors.lic" />
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="InterStyle.AppHost/InterStyle.AppHost.csproj" Id="8cc97388-30cc-40d1-94aa-d5720a93aa79" />
@@ -12,6 +13,7 @@
   <Project Path="InterStyle.Curtains.Application/InterStyle.Curtains.Application.csproj" Id="9372ca39-a698-4028-9bf7-5c3e52f12310" />
   <Project Path="InterStyle.Curtains.Domain/InterStyle.Curtains.Domain.csproj" Id="e39f4a2c-c1d9-4c35-ae55-219c5f9d08bc" />
   <Project Path="InterStyle.Curtains.Infrastructure/InterStyle.Curtains.Infrastructure.csproj" Id="2f5d0619-8866-4884-a4bb-975a8c301b53" />
+  <Project Path="InterStyle.ImageApi/InterStyle.ImageApi.csproj" />
   <Project Path="InterStyle.Leads.Api/InterStyle.Leads.Api.csproj" />
   <Project Path="InterStyle.Leads.Application/InterStyle.Leads.Application.csproj" Id="3a721c17-6fb0-45e3-a27c-553a3153dc1d" />
   <Project Path="InterStyle.Leads.Domain/InterStyle.Leads.Domain.csproj" Id="21864190-e8eb-4cf4-88f7-008dee7195d7" />

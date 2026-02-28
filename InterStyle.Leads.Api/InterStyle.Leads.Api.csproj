@@ -28,4 +28,8 @@
 		<ProjectReference Include="..\InterStyle.Leads.Infrastructure\InterStyle.Leads.Infrastructure.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\" />
+	</ItemGroup>
+
 </Project>

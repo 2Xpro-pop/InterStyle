@@ -1,4 +1,5 @@
 using InterStyle.ApiShared;
+using InterStyle.Curtains.Api;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
@@ -21,6 +22,8 @@ var withApiVersioning = builder.Services.AddApiVersioning();
 
 builder.AddDefaultOpenApi(withApiVersioning);
 
+builder.Services.AddApiVersioning();
+
 builder.Services.AddScoped<ICurtainRepository, CurtainRepository>();
 
 builder.Services.AddScoped<ICurtainQueries, CurtainsQueries>();
@@ -35,62 +38,8 @@ app.UseHealthChecksDefaults();
 
 app.UseDefaultOpenApi();
 
-app.MapPost("/curtains", async (CreateCurtainCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    var id = await mediator.Send(command, ct);
-    return Results.Created($"/curtains/{id.Value}", new { id = id.Value });
-});
+var curtains = app.NewVersionedApi("Curtains");
 
-app.MapGet("/curtains", async (ICurtainQueries queries, CancellationToken ct) =>
-{
-    var result = await queries.GetAllAsync(ct);
-    return Results.Ok(result);
-});
-
-app.MapGet("/curtains/{id:guid}", async (Guid id, ICurtainQueries queries, CancellationToken ct) =>
-{
-    var result = await queries.GetByIdAsync(id, ct);
-    return result is not null ? Results.Ok(result) : Results.NotFound();
-});
-
-app.MapPut("/curtains/{id:guid}/name", async (Guid id, ChangeCurtainNameCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    if (id != command.CurtainId)
-    {
-        return Results.BadRequest(new { error = "Route id does not match command id." });
-    }
-    await mediator.Send(command, ct);
-    return Results.NoContent();
-});
-
-app.MapPut("/curtains/{id:guid}/description", async (Guid id, ChangeCurtainDescriptionCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    if (id != command.CurtainId)
-    {
-        return Results.BadRequest(new { error = "Route id does not match command id." });
-    }
-    await mediator.Send(command, ct);
-    return Results.NoContent();
-});
-
-app.MapPut("/curtains/{id:guid}/picture", async (Guid id, ChangeCurtainPictureCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    if (id != command.CurtainId)
-    {
-        return Results.BadRequest(new { error = "Route id does not match command id." });
-    }
-    await mediator.Send(command, ct);
-    return Results.NoContent();
-});
-
-app.MapPut("/curtains/{id:guid}/preview", async (Guid id, ChangeCurtainPreviewCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    if (id != command.CurtainId)
-    {
-        return Results.BadRequest(new { error = "Route id does not match command id." });
-    }
-    await mediator.Send(command, ct);
-    return Results.NoContent();
-});
+curtains.MapCurainsApiV1();
 
 app.Run();

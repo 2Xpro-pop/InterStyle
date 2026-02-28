@@ -1,4 +1,5 @@
 using InterStyle.ApiShared;
+using InterStyle.Reviews.Api;
 using InterStyle.Reviews.Application.Commands;
 using InterStyle.Reviews.Application.Queries;
 using InterStyle.Reviews.Domain;
@@ -35,51 +36,8 @@ app.UseHealthChecksDefaults();
 
 app.UseDefaultOpenApi();
 
-app.MapPost("/reviews", async (SubmitReviewCommand command, IMediator mediator, CancellationToken ct) =>
-{
-    var reviewId = await mediator.Send(command, ct);
-    return Results.Created($"/reviews/{reviewId.Value}", new { id = reviewId.Value });
-});
+var reviews = app.NewVersionedApi("Reviews");
 
-app.MapPost("/reviews/{id:guid}/approve", async (Guid id, IMediator mediator, CancellationToken ct) =>
-{
-    var result = await mediator.Send(new ApproveReviewCommand(id), ct);
-    return result ? Results.Ok() : Results.NotFound();
-});
-
-app.MapGet("/reviews", async (
-    int? page,
-    int? pageSize,
-    IReviewQueries queries,
-    CancellationToken ct) =>
-{
-    var result = await queries.GetApprovedAsync(page ?? 1, pageSize ?? 10, ct);
-    return Results.Ok(result);
-});
-
-app.MapGet("/reviews/pending", async (IReviewQueries queries, CancellationToken ct) =>
-{
-    var result = await queries.GetPendingAsync(ct);
-    return Results.Ok(result);
-});
-
-app.MapGet("/reviews/statistics", async (
-    DateTimeOffset? fromUtc,
-    DateTimeOffset? toUtc,
-    IReviewQueries queries,
-    CancellationToken ct) =>
-{
-    var now = DateTimeOffset.UtcNow;
-    var from = fromUtc ?? now.AddDays(-30);
-    var to = toUtc ?? now;
-
-    if (from >= to)
-    {
-        return Results.BadRequest(new { error = "fromUtc must be earlier than toUtc." });
-    }
-
-    var stats = await queries.GetStatisticsAsync(from, to, ct);
-    return Results.Ok(stats);
-});
+reviews.MapReviewsApiV1();
 
 app.Run();

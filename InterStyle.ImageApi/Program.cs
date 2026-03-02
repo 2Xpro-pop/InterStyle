@@ -19,14 +19,16 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
 
-builder.Services.AddSingleton<IMessagePublisher>(sp =>
-{
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("rabbitmq")
-        ?? throw new InvalidOperationException("RabbitMQ connection string missing");
+//builder.Services.AddSingleton<IMessagePublisher>(sp =>
+//{
+//    var configuration = sp.GetRequiredService<IConfiguration>();
+//    var connectionString = configuration.GetConnectionString("rabbitmq")
+//        ?? throw new InvalidOperationException("RabbitMQ connection string missing");
 
-    return new RabbitMqMessagePublisher(connectionString);
-});
+//    return new RabbitMqMessagePublisher(connectionString);
+//});
+
+builder.Services.AddSingleton<IMessagePublisher, NopeMessagePublisher>();
 
 builder.Services.Configure<RouteOptions>(
     options => options.SetParameterPolicy<RegexInlineRouteConstraint>("regex"));

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using InterStyle.ApiShared;
 using InterStyle.ApiShared.Events;
 using InterStyle.ImageApi;
@@ -32,7 +33,11 @@ builder.Services.Configure<RouteOptions>(
 
 builder.Services.AddHealthChecks();
 
-var withApiVersioning = builder.Services.AddApiVersioning();
+var withApiVersioning = builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+});
 
 builder.AddDefaultOpenApi(withApiVersioning);
 

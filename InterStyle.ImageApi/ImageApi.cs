@@ -10,7 +10,7 @@ public static class ImageApi
 {
     public static RouteGroupBuilder MapImageApiV1(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("images")
+        var api = app.MapGroup("api/images")
             .HasApiVersion(1.0)
             .WithTags("Images");
 

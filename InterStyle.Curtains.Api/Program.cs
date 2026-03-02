@@ -31,6 +31,25 @@ builder.Services.AddScoped<ICurtainQueries, CurtainsQueries>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient("ImageApi", client =>
+{
+    client.BaseAddress = new Uri("http://interstyle-imageapi", UriKind.Absolute);
+}).AddServiceDiscovery()
+  .AddStandardResilienceHandler(options =>
+  {
+      options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+
+      options.Retry.MaxRetryAttempts = 3;
+      options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+      options.Retry.Delay = TimeSpan.FromMilliseconds(200);
+
+      options.CircuitBreaker.FailureRatio = 0.5;
+      options.CircuitBreaker.MinimumThroughput = 10;
+      options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(15);
+  }); ;
+
+builder.Services.AddServiceDiscovery();
+
 var app = builder.Build();
 
 app.UseSwaggerDefaults();

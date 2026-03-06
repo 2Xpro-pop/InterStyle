@@ -1,9 +1,16 @@
 using InterStyle.AppHost;
+using Microsoft.Extensions.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin();
+var compose = builder.AddDockerComposeEnvironment("compose");
+
+var postgres = builder.AddPostgres("postgres");
+
+if (builder.Environment.IsDevelopment())
+{
+    postgres.WithPgAdmin();
+}
 
 const string IdentityApiName = "interstyle-identityapi";
 const string IdentityApiUrl = $"http://{IdentityApiName}";

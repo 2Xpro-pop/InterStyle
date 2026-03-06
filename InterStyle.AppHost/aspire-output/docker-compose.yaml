@@ -1,0 +1,201 @@
+services:
+  compose-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    ports:
+      - "18888"
+    expose:
+      - "18889"
+      - "18890"
+    networks:
+      - "aspire"
+    restart: "always"
+  postgres:
+    image: "docker.io/library/postgres:17.6"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    expose:
+      - "5432"
+    networks:
+      - "aspire"
+  interstyle-leads-api:
+    image: "${INTERSTYLE_LEADS_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${INTERSTYLE_LEADS_API_PORT}"
+      ConnectionStrings__leadsdb: "Host=postgres;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=leadsdb"
+      LEADSDB_HOST: "postgres"
+      LEADSDB_PORT: "5432"
+      LEADSDB_USERNAME: "postgres"
+      LEADSDB_PASSWORD: "${POSTGRES_PASSWORD}"
+      LEADSDB_URI: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/leadsdb"
+      LEADSDB_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/leadsdb"
+      LEADSDB_DATABASENAME: "leadsdb"
+      Jwt__Authority: "http://interstyle-identityapi"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-leads-api"
+    expose:
+      - "${INTERSTYLE_LEADS_API_PORT}"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  interstyle-reviews-api:
+    image: "${INTERSTYLE_REVIEWS_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${INTERSTYLE_REVIEWS_API_PORT}"
+      ConnectionStrings__reviewsdb: "Host=postgres;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=reviewsdb"
+      REVIEWSDB_HOST: "postgres"
+      REVIEWSDB_PORT: "5432"
+      REVIEWSDB_USERNAME: "postgres"
+      REVIEWSDB_PASSWORD: "${POSTGRES_PASSWORD}"
+      REVIEWSDB_URI: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/reviewsdb"
+      REVIEWSDB_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/reviewsdb"
+      REVIEWSDB_DATABASENAME: "reviewsdb"
+      Jwt__Authority: "http://interstyle-identityapi"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-reviews-api"
+    expose:
+      - "${INTERSTYLE_REVIEWS_API_PORT}"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  interstyle-imageapi:
+    image: "${INTERSTYLE_IMAGEAPI_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${INTERSTYLE_IMAGEAPI_PORT}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-imageapi"
+    expose:
+      - "${INTERSTYLE_IMAGEAPI_PORT}"
+    networks:
+      - "aspire"
+  interstyle-curtains-api:
+    image: "${INTERSTYLE_CURTAINS_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${INTERSTYLE_CURTAINS_API_PORT}"
+      ConnectionStrings__curtainsdb: "Host=postgres;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=curtainsdb"
+      CURTAINSDB_HOST: "postgres"
+      CURTAINSDB_PORT: "5432"
+      CURTAINSDB_USERNAME: "postgres"
+      CURTAINSDB_PASSWORD: "${POSTGRES_PASSWORD}"
+      CURTAINSDB_URI: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/curtainsdb"
+      CURTAINSDB_JDBCCONNECTIONSTRING: "jdbc:postgresql://postgres:5432/curtainsdb"
+      CURTAINSDB_DATABASENAME: "curtainsdb"
+      INTERSTYLE_IMAGEAPI_HTTP: "http://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      services__interstyle-imageapi__http__0: "http://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      INTERSTYLE_IMAGEAPI_HTTPS: "https://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-curtains-api"
+    expose:
+      - "${INTERSTYLE_CURTAINS_API_PORT}"
+    depends_on:
+      postgres:
+        condition: "service_started"
+    networks:
+      - "aspire"
+  interstyle-identityapi:
+    image: "${INTERSTYLE_IDENTITYAPI_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${INTERSTYLE_IDENTITYAPI_PORT}"
+      Admin__Username: "${ADMIN_LOGIN}"
+      Admin__Password: "${ADMIN_PASSWORD}"
+      Jwt__Signing__ActiveKid: "${JWT_ACTIVE_KID}"
+      Jwt__Signing__Keys__0__Kid: "${JWT_ACTIVE_KID}"
+      Jwt__Signing__Keys__0__PfxBase64: "${JWT_SIGNING_PFX}"
+      Jwt__Signing__Keys__0__PfxPassword: "${JWT_SIGNING_PASSWORD}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-identityapi"
+    expose:
+      - "${INTERSTYLE_IDENTITYAPI_PORT}"
+    networks:
+      - "aspire"
+  interstyle-apigateway:
+    image: "mcr.microsoft.com/dotnet/nightly/yarp:2.3.0-preview.4"
+    command:
+      - "/app/yarp.dll"
+    entrypoint:
+      - "dotnet"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      INTERSTYLE_LEADS_API_HTTP: "http://interstyle-leads-api:${INTERSTYLE_LEADS_API_PORT}"
+      REVERSEPROXY__ROUTES__route0__MATCH__PATH: "/api/leads"
+      REVERSEPROXY__ROUTES__route0__CLUSTERID: "cluster_interstyle-leads-api"
+      REVERSEPROXY__ROUTES__route1__MATCH__PATH: "/api/leads/{*any}"
+      REVERSEPROXY__ROUTES__route1__CLUSTERID: "cluster_interstyle-leads-api"
+      REVERSEPROXY__ROUTES__route2__MATCH__PATH: "/api/reviews"
+      REVERSEPROXY__ROUTES__route2__CLUSTERID: "cluster_interstyle-reviews-api"
+      REVERSEPROXY__ROUTES__route3__MATCH__PATH: "/api/reviews/{*any}"
+      REVERSEPROXY__ROUTES__route3__CLUSTERID: "cluster_interstyle-reviews-api"
+      REVERSEPROXY__ROUTES__route4__MATCH__PATH: "/api/curtains"
+      REVERSEPROXY__ROUTES__route4__CLUSTERID: "cluster_interstyle-curtains-api"
+      REVERSEPROXY__ROUTES__route5__MATCH__PATH: "/api/curtains/{*any}"
+      REVERSEPROXY__ROUTES__route5__CLUSTERID: "cluster_interstyle-curtains-api"
+      REVERSEPROXY__ROUTES__route6__MATCH__PATH: "/api/images"
+      REVERSEPROXY__ROUTES__route6__CLUSTERID: "cluster_interstyle-imageapi"
+      REVERSEPROXY__ROUTES__route7__MATCH__PATH: "/api/images/{*any}"
+      REVERSEPROXY__ROUTES__route7__CLUSTERID: "cluster_interstyle-imageapi"
+      REVERSEPROXY__ROUTES__route8__MATCH__PATH: "/api/identity"
+      REVERSEPROXY__ROUTES__route8__CLUSTERID: "cluster_interstyle-identityapi"
+      REVERSEPROXY__ROUTES__route9__MATCH__PATH: "/api/identity/{*any}"
+      REVERSEPROXY__ROUTES__route9__CLUSTERID: "cluster_interstyle-identityapi"
+      REVERSEPROXY__ROUTES__route10__MATCH__PATH: "/.well-known/{*any}"
+      REVERSEPROXY__ROUTES__route10__CLUSTERID: "cluster_interstyle-identityapi"
+      REVERSEPROXY__CLUSTERS__cluster_interstyle-leads-api__DESTINATIONS__destination1__ADDRESS: "https+http://interstyle-leads-api"
+      REVERSEPROXY__CLUSTERS__cluster_interstyle-reviews-api__DESTINATIONS__destination1__ADDRESS: "https+http://interstyle-reviews-api"
+      REVERSEPROXY__CLUSTERS__cluster_interstyle-curtains-api__DESTINATIONS__destination1__ADDRESS: "https+http://interstyle-curtains-api"
+      REVERSEPROXY__CLUSTERS__cluster_interstyle-imageapi__DESTINATIONS__destination1__ADDRESS: "https+http://interstyle-imageapi"
+      REVERSEPROXY__CLUSTERS__cluster_interstyle-identityapi__DESTINATIONS__destination1__ADDRESS: "https+http://interstyle-identityapi"
+      services__interstyle-leads-api__http__0: "http://interstyle-leads-api:${INTERSTYLE_LEADS_API_PORT}"
+      INTERSTYLE_LEADS_API_HTTPS: "https://interstyle-leads-api:${INTERSTYLE_LEADS_API_PORT}"
+      INTERSTYLE_REVIEWS_API_HTTP: "http://interstyle-reviews-api:${INTERSTYLE_REVIEWS_API_PORT}"
+      services__interstyle-reviews-api__http__0: "http://interstyle-reviews-api:${INTERSTYLE_REVIEWS_API_PORT}"
+      INTERSTYLE_REVIEWS_API_HTTPS: "https://interstyle-reviews-api:${INTERSTYLE_REVIEWS_API_PORT}"
+      INTERSTYLE_CURTAINS_API_HTTP: "http://interstyle-curtains-api:${INTERSTYLE_CURTAINS_API_PORT}"
+      services__interstyle-curtains-api__http__0: "http://interstyle-curtains-api:${INTERSTYLE_CURTAINS_API_PORT}"
+      INTERSTYLE_CURTAINS_API_HTTPS: "https://interstyle-curtains-api:${INTERSTYLE_CURTAINS_API_PORT}"
+      INTERSTYLE_IMAGEAPI_HTTP: "http://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      services__interstyle-imageapi__http__0: "http://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      INTERSTYLE_IMAGEAPI_HTTPS: "https://interstyle-imageapi:${INTERSTYLE_IMAGEAPI_PORT}"
+      INTERSTYLE_IDENTITYAPI_HTTP: "http://interstyle-identityapi:${INTERSTYLE_IDENTITYAPI_PORT}"
+      services__interstyle-identityapi__http__0: "http://interstyle-identityapi:${INTERSTYLE_IDENTITYAPI_PORT}"
+      INTERSTYLE_IDENTITYAPI_HTTPS: "https://interstyle-identityapi:${INTERSTYLE_IDENTITYAPI_PORT}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://compose-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "interstyle-apigateway"
+    ports:
+      - "5000"
+    networks:
+      - "aspire"
+networks:
+  aspire:
+    driver: "bridge"

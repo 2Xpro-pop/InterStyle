@@ -44,4 +44,4 @@ jobs:
           Parameters__jwt-signing-password: ${{ secrets.JWT_SIGNING_PASSWORD }}
           Parameters__jwt-active-kid: main
 
-        run: aspire do push
+        run: aspire do push --log-level debug

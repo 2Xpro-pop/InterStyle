@@ -1,9 +1,26 @@
 using InterStyle.AppHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+if(builder.Environment.IsDevelopment())
+{
+    builder.Services.AddLogging(logging =>
+    {
+        logging.SetMinimumLevel(LogLevel.Debug);
+    });
+
+}
+
 var compose = builder.AddDockerComposeEnvironment("compose");
+
+var endpoint = builder.AddParameter("registry-endpoint");
+var repository = builder.AddParameter("registry-repository");
+#pragma warning disable ASPIRECOMPUTE003
+builder.AddContainerRegistry("container-registry", endpoint, repository);
+#pragma warning restore ASPIRECOMPUTE003
 
 var postgres = builder.AddPostgres("postgres");
 

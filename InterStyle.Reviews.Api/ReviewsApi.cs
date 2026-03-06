@@ -8,7 +8,7 @@ public static class ReviewsApi
 {
     public static RouteGroupBuilder MapReviewsApiV1(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("reviews")
+        var api = app.MapGroup("api/reviews")
             .HasApiVersion(1.0)
             .WithTags("Reviews");
 

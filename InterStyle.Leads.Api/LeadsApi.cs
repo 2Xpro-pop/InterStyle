@@ -8,7 +8,7 @@ public static class LeadsApi
 {
     public static RouteGroupBuilder MapLeadsApiV1(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("leads")
+        var api = app.MapGroup("api/leads")
             .HasApiVersion(1.0)
             .WithTags("Leads");
 

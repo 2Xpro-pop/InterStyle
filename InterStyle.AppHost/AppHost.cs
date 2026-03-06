@@ -19,23 +19,27 @@ var jwtPfx = builder.AddParameter("jwt-signing-pfx", secret: true);
 var jwtPfxPassword = builder.AddParameter("jwt-signing-password", secret: true);
 var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
-builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
+var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
     .WithReference(leadsDb).WaitFor(leadsDb)
     .WithJwtAuthority(IdentityApiUrl);
 
-builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
+var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
     .WithReference(reviewsDb).WaitFor(reviewsDb)
     .WithJwtAuthority(IdentityApiUrl);
 
 var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
 
-builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
+var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
     .WithReference(curtainsDb).WaitFor(curtainsDb)
     .WithReference(imageApi);
 
-builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
+var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
     .WithEnvironment("Admin__Username", adminLogin)
     .WithEnvironment("Admin__Password", adminPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
+
+builder.AddYarp("interstyle-apigateway")
+    .WithExternalHttpEndpoints()
+    .ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi);
 
 builder.Build().Run();

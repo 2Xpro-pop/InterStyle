@@ -23,6 +23,7 @@
     <Project Path="InterStyle.Shared/InterStyle.Shared.csproj" Id="8a932dfb-da38-4b41-aeae-981a10bc73f4" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/deploy.yml" />
     <File Path="C:/Users/Asanov/Downloads/sixlabors.lic" />
     <File Path="Directory.Packages.props" />
   </Folder>

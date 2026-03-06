@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ] // fix because main branch is master not main
 
 jobs:
 

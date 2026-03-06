@@ -171,6 +171,7 @@ public static class OpenApiExtensions
     public static OpenApiOptions ApplySecuritySchemeDefinitions(this OpenApiOptions options)
     {
         options.AddDocumentTransformer<SecuritySchemeDefinitionsTransformer>();
+        options.AddDocumentTransformer<BearerSchemeDefinitionsTransformer>();
         return options;
     }
 
@@ -185,19 +186,31 @@ public static class OpenApiExtensions
                 return Task.CompletedTask;
             }
 
-            operation.Responses ??= new OpenApiResponses();
+            operation.Responses ??= [];
             operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
             operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
 
-            var oAuthScheme = new OpenApiSecuritySchemeReference("oauth2", null);
+            var cfg = context.ApplicationServices.GetRequiredService<IConfiguration>();
 
-            operation.Security = new List<OpenApiSecurityRequirement>
+            if (cfg.GetSection("Jwt").Exists())
             {
-                new()
-                {
-                    [oAuthScheme] = scopes.ToList()
-                }
-            };
+                var bearer = new OpenApiSecuritySchemeReference("bearer", null);
+                operation.Security =
+                [
+                    new() { [bearer] = [] }
+                ];
+                return Task.CompletedTask;
+            }
+
+            if (cfg.GetSection("Identity").Exists())
+            {
+                var oAuthScheme = new OpenApiSecuritySchemeReference("oauth2", null);
+                operation.Security =
+                [
+                    new() { [oAuthScheme] = [..scopes] }
+                ];
+                return Task.CompletedTask;
+            }
 
             return Task.CompletedTask;
         });
@@ -242,7 +255,7 @@ public static class OpenApiExtensions
         return options;
     }
 
-    private class SecuritySchemeDefinitionsTransformer(IConfiguration configuration) : IOpenApiDocumentTransformer
+    private sealed class SecuritySchemeDefinitionsTransformer(IConfiguration configuration) : IOpenApiDocumentTransformer
     {
         public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
         {
@@ -271,6 +284,29 @@ public static class OpenApiExtensions
             document.Components ??= new();
             document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
             document.Components.SecuritySchemes.Add("oauth2", securityScheme);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class BearerSchemeDefinitionsTransformer(IConfiguration configuration) : IOpenApiDocumentTransformer
+    {
+        public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+        {
+            var jwtSection = configuration.GetSection("Jwt");
+            if (!jwtSection.Exists())
+                return Task.CompletedTask;
+
+            document.Components ??= new();
+            document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+            document.Components.SecuritySchemes["bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = "Paste JWT here: Bearer {token}"
+            };
+
             return Task.CompletedTask;
         }
     }

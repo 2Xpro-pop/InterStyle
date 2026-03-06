@@ -1,0 +1,6 @@
+@InterStyle.IdentityApi_HostAddress = http://localhost:5034
+
+GET {{InterStyle.IdentityApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

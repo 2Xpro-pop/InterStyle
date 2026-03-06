@@ -1,30 +1,41 @@
+using InterStyle.AppHost;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin();
 
+const string IdentityApiName = "interstyle-identityapi";
+const string IdentityApiUrl = $"http://{IdentityApiName}";
+
 var leadsDb = postgres.AddDatabase("leadsdb");
 var reviewsDb = postgres.AddDatabase("reviewsdb");
 var curtainsDb = postgres.AddDatabase("curtainsdb");
 
-var username = builder.AddParameter("username", secret: true);
-var password = builder.AddParameter("password", secret: true);
+var adminLogin = builder.AddParameter("admin-login", secret: true);
+var adminPassword = builder.AddParameter("admin-password", secret: true);
 
-var rabbit = builder.AddRabbitMQ("rabbitmq", username, password)
-    .WithManagementPlugin();
+var jwtPfx = builder.AddParameter("jwt-signing-pfx", secret: true);
+var jwtPfxPassword = builder.AddParameter("jwt-signing-password", secret: true);
+var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
 builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
-    .WithReference(leadsDb).WaitFor(leadsDb);
+    .WithReference(leadsDb).WaitFor(leadsDb)
+    .WithJwtAuthority(IdentityApiUrl);
 
 builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
-    .WithReference(reviewsDb).WaitFor(reviewsDb);
+    .WithReference(reviewsDb).WaitFor(reviewsDb)
+    .WithJwtAuthority(IdentityApiUrl);
 
-var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi")
-    .WithReference(rabbit).WaitFor(rabbit);
+var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
 
 builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
     .WithReference(curtainsDb).WaitFor(curtainsDb)
-    .WithReference(rabbit).WaitFor(rabbit)
     .WithReference(imageApi);
+
+builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
+    .WithEnvironment("Admin__Username", adminLogin)
+    .WithEnvironment("Admin__Password", adminPassword)
+    .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
 builder.Build().Run();

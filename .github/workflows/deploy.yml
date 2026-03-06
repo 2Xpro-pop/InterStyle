@@ -40,7 +40,7 @@ jobs:
       - name: Build and Push images with Aspire
         env:
           Parameters__registry_endpoint: ghcr.io
-          Parameters__registry_repository: 2Xpro-pop/InterStyle
+          Parameters__registry_repository: 2xpro-pop/interstyle
 
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}

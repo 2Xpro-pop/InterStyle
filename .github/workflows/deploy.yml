@@ -39,10 +39,10 @@ jobs:
 
       - name: Build and Push images with Aspire
         env:
-          RepositoryUrl: https://github.com/${{ github.repository }}
+          RepositoryUrl: https://github.com/${{ toLower(github.repository) }}
   
           Parameters__registry_endpoint: ghcr.io
-          Parameters__registry_repository: ${{ github.repository_owner }}/${{ github.event.repository.name }}
+          Parameters__registry_repository: ${{ toLower(github.repository) }}
 
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}

@@ -37,12 +37,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_TOKEN }}
 
+      - name: downcase REPO
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
       - name: Build and Push images with Aspire
         env:
-          RepositoryUrl: https://github.com/${{ toLower(github.repository) }}
+          RepositoryUrl: https://github.com/${{ env.REPO }}
   
           Parameters__registry_endpoint: ghcr.io
-          Parameters__registry_repository: ${{ toLower(github.repository) }}
+          Parameters__registry_repository: ${{ env.REPO }}
 
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}

@@ -27,6 +27,7 @@
     <File Path="C:/Users/Asanov/Downloads/sixlabors.lic" />
     <File Path="Directory.Packages.props" />
   </Folder>
+  <Project Path="AdminPanel/AdminPanel.csproj" />
   <Project Path="InterStyle.AppHost/InterStyle.AppHost.csproj" Id="8cc97388-30cc-40d1-94aa-d5720a93aa79" />
   <Project Path="InterStyle.IdentityApi/InterStyle.IdentityApi.csproj" />
   <Project Path="InterStyle.ImageApi/InterStyle.ImageApi.csproj" />

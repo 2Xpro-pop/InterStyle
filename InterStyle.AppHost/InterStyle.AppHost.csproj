@@ -11,6 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AdminPanel\AdminPanel.csproj" />
 		<ProjectReference Include="..\InterStyle.Curtains.Api\InterStyle.Curtains.Api.csproj" />
 		<ProjectReference Include="..\InterStyle.IdentityApi\InterStyle.IdentityApi.csproj" />
 		<ProjectReference Include="..\InterStyle.ImageApi\InterStyle.ImageApi.csproj" />

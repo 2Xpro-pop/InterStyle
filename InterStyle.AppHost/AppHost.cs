@@ -62,8 +62,10 @@ var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityAp
     .WithEnvironment("Admin__Password", adminPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
-builder.AddYarp("interstyle-apigateway")
+var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel");
+
+builder.AddYarp("interstyle-gateway")
     .WithExternalHttpEndpoints()
-    .ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi);
+    .ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel);
 
 builder.Build().Run();

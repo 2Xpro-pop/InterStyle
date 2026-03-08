@@ -14,7 +14,9 @@ public static class YarpExtensions
         IResourceBuilder<ProjectResource> reviewsApi,
         IResourceBuilder<ProjectResource> curtainsApi,
         IResourceBuilder<ProjectResource> imageApi,
-        IResourceBuilder<ProjectResource> identityApi)
+        IResourceBuilder<ProjectResource> identityApi,
+        IResourceBuilder<ProjectResource> adminPanel
+        )
     {
         return builder.WithConfiguration(yarp =>
         {
@@ -23,6 +25,7 @@ public static class YarpExtensions
             var curtainsCluster = yarp.AddCluster(curtainsApi);
             var imageCluster = yarp.AddCluster(imageApi);
             var identityCluster = yarp.AddCluster(identityApi);
+            var adminPanelCluster = yarp.AddCluster(adminPanel);
 
             yarp.AddRoute("/api/leads", leadsCluster);
             yarp.AddRoute("/api/leads/{*any}", leadsCluster);
@@ -40,6 +43,12 @@ public static class YarpExtensions
             yarp.AddRoute("/api/identity/{*any}", identityCluster);
 
             yarp.AddRoute("/.well-known/{*any}", identityCluster);
+
+            yarp.AddRoute("/admin", adminPanelCluster)
+                .WithTransformPathRemovePrefix("/admin");
+
+            yarp.AddRoute("/admin/{*any}", adminPanelCluster)
+                .WithTransformPathRemovePrefix("/admin");
         });
     }
 }

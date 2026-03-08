@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using InterStyle.Shared;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 
 namespace InterStyle.IdentityApi;
@@ -12,7 +13,7 @@ public static class IdentityApi
             .WithTags("Identity");
 
         api.MapPost("/login", async (
-            LoginRequest request,
+            Shared.LoginRequest request,
             UserManager<AdminUser> userManager,
             JwtTokenIssuer issuer) =>
         {
@@ -34,8 +35,4 @@ public static class IdentityApi
 
         return api;
     }
-
-    private sealed record LoginRequest(string Username, string Password);
-
-    private sealed record TokenResponse(string Token);
 }

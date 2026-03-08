@@ -5,16 +5,22 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
 
-namespace AdminPanel;
+namespace AdminPanel.Services;
 
-public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider
+public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider, IJwtTokenSetter
 {
     private const string TokenStorageKey = "jwt_token";
 
     private readonly IJSRuntime _jsRuntime = jsRuntime;
+    private JwtAuthenticationState? _state = null;
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        if(_state != null && !_state.IsExpired)
+        {
+            return _state;
+        }
+
         string? token;
 
         try
@@ -49,13 +55,16 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
             return JwtAuthenticationState.NotAuthenticated;
         }
 
-        return new JwtAuthenticationState(jwtToken);
+        return _state = new JwtAuthenticationState(jwtToken);
     }
 
-    public async Task SetTokenAsync(string token)
+    public async Task SetTokenAsync(string token, bool remember)
     {
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenStorageKey, token);
-
+        if(remember)
+        {
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenStorageKey, token);
+        }
+        
         var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
         var state = new JwtAuthenticationState(jwtToken);
 
@@ -91,6 +100,8 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
             new(new ClaimsPrincipal(new ClaimsIdentity()));
 
         public JwtSecurityToken Token { get; } = token;
+
+        public bool IsExpired => IsExpired(Token);
 
         private static ClaimsPrincipal CreateClaimsPrincipal(JwtSecurityToken token)
         {

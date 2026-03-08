@@ -1,4 +1,8 @@
 ﻿@page "/authentication/login"
+
+@inject IAuthService AuthService
+@inject ILogger<Authentication> Logger
+
 @layout AuthenticationLayout
 
 @using System.ComponentModel.DataAnnotations
@@ -72,20 +76,14 @@
 
         try
         {
-            await Task.Delay(800);
-
-            var isSuccess = _model.Login == "admin" && _model.Password == "admin";
-
-            if (!isSuccess)
-            {
-                _errorMessage = "Invalid username or password.";
-                return;
-            }
+            await AuthService.Login(_model.Login, _model.Password, _model.RememberMe);
 
         }
-        catch
+        catch(Exception exception)
         {
             _errorMessage = "An error occurred during login.";
+
+            Logger.LogDebug(exception, "An error occurred during login.");
         }
         finally
         {

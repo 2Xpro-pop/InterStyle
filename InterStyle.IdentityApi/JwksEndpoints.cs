@@ -23,24 +23,38 @@ public static class JwksEndpoints
 
         app.MapGet("/.well-known/jwks.json", (JwtSigningKeyStore store) =>
         {
-            var jwks = store.GetAll()
+            var keys = store.GetAll()
                 .Select(pair =>
                 {
                     var kid = pair.Key;
                     var cert = pair.Value;
 
-                    var key = new X509SecurityKey(cert) { KeyId = kid };
+                    using var rsa = cert.GetRSAPublicKey();
+                    if (rsa is null)
+                    {
+                        throw new InvalidOperationException($"Certificate '{kid}' does not contain RSA public key.");
+                    }
 
-                    var jwk = JsonWebKeyConverter.ConvertFromX509SecurityKey(key);
-                    jwk.Use = "sig";
-                    jwk.Alg = "RS256";
-                    jwk.Kid = kid;
+                    var parameters = rsa.ExportParameters(false);
 
-                    return jwk;
+                    return new
+                    {
+                        kty = "RSA",
+                        use = "sig",
+                        kid,
+                        alg = "RS256",
+                        n = Base64UrlEncoder.Encode(parameters.Modulus!),
+                        e = Base64UrlEncoder.Encode(parameters.Exponent!),
+                        x5c = new[]
+                        {
+                            Convert.ToBase64String(cert.RawData)
+                        },
+                        x5t = Base64UrlEncoder.Encode(cert.GetCertHash())
+                    };
                 })
                 .ToArray();
 
-            return Results.Json(new { keys = jwks });
+            return Results.Json(new { keys });
         })
         .AllowAnonymous();
 

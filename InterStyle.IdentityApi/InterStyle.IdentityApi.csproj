@@ -15,8 +15,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ContainerLabel Include="org.opencontainers.image.source"
-						Value="$(RepositoryUrl)" />
+		<ContainerLabel Include="org.opencontainers.image.source" Value="$(RepositoryUrl)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -26,6 +25,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\InterStyle.ApiShared\InterStyle.ApiShared.csproj" />
+		<ProjectReference Include="..\InterStyle.Shared\InterStyle.Shared.csproj" />
 	</ItemGroup>
 
 </Project>

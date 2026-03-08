@@ -44,10 +44,7 @@ public static class YarpExtensions
 
             yarp.AddRoute("/.well-known/{*any}", identityCluster);
 
-            yarp.AddRoute("/admin", adminPanelCluster)
-                .WithTransformPathRemovePrefix("/admin");
-
-            yarp.AddRoute("/admin/{*any}", adminPanelCluster)
+            yarp.AddRoute("/admin/{**catch-all}", adminPanelCluster)
                 .WithTransformPathRemovePrefix("/admin");
         });
     }

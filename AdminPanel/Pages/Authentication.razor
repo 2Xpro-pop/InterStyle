@@ -2,6 +2,7 @@
 
 @inject IAuthService AuthService
 @inject ILogger<Authentication> Logger
+@inject NavigationManager Navigation
 
 @layout AuthenticationLayout
 
@@ -77,6 +78,8 @@
         try
         {
             await AuthService.Login(_model.Login, _model.Password, _model.RememberMe);
+
+            await InvokeAsync(() => Navigation.NavigateTo(""));
 
         }
         catch(Exception exception)

@@ -55,11 +55,14 @@ var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imag
 
 var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
     .WithReference(curtainsDb).WaitFor(curtainsDb)
-    .WithReference(imageApi);
+    .WithReference(imageApi)
+    .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
+    .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
     .WithEnvironment("Admin__Username", adminLogin)
     .WithEnvironment("Admin__Password", adminPassword)
+    .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
 var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel");

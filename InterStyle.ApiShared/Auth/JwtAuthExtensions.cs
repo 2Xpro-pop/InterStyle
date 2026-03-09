@@ -2,8 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using NetDevPack.Security.JwtExtensions;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace InterStyle.ApiShared.Auth;
@@ -23,7 +26,18 @@ public static class JwtAuthExtensions
             .ValidateOnStart();
 
         if (string.IsNullOrWhiteSpace(jwt.Authority))
+        {
             throw new InvalidOperationException("Jwt:Authority must be configured");
+        }
+
+        if (string.IsNullOrWhiteSpace(jwt.PublicKey))
+        {
+            throw new InvalidOperationException("Jwt:PublicKey must be configured");
+        }
+
+        var rsa = RSA.Create();
+        rsa.ImportFromPem(jwt.PublicKey);
+        var securityKey = new RsaSecurityKey(rsa);
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -37,6 +51,7 @@ public static class JwtAuthExtensions
                 {
                     ValidateIssuer = true,
                     ValidIssuer = jwt.Issuer,
+                    IssuerSigningKey = securityKey,
 
                     ValidateAudience = true,
                     ValidAudience = jwt.Audience,

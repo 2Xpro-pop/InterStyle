@@ -1,0 +1,337 @@
+﻿@page "/"
+@page "/curtains"
+@attribute [Authorize]
+
+@inject ICurtainsApi CurtainsApi
+@inject ILogger<Curtains> Logger
+
+<PageTitle>Curtains</PageTitle>
+
+<div class="curtains-page">
+    <div class="page-header">
+        <h1>Curtains</h1>
+        <button class="secondary-button" @onclick="LoadCurtainsAsync" disabled="@_isLoading">Refresh</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="alert success">@_message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="alert error">@_errorMessage</div>
+    }
+
+    <section class="create-card">
+        <h2>Create curtain</h2>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Name</label>
+                <input class="form-control" @bind="_newCurtain.Name" />
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control" rows="3" @bind="_newCurtain.Description"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Picture</label>
+                <InputFile OnChange="OnCreatePictureSelected" accept="image/*" />
+            </div>
+
+            <div class="form-group">
+                <label>Preview</label>
+                <InputFile OnChange="OnCreatePreviewSelected" accept="image/*" />
+            </div>
+        </div>
+
+        <button class="primary-button" @onclick="CreateCurtainAsync" disabled="@_isCreating">
+            @(_isCreating ? "Creating..." : "Create")
+        </button>
+    </section>
+
+    @if (_isLoading)
+    {
+        <p>Loading curtains...</p>
+    }
+    else if (_curtains.Count == 0)
+    {
+        <p>No curtains found.</p>
+    }
+    else
+    {
+        <div class="curtain-grid">
+            @foreach (var curtain in _curtains)
+            {
+                var editor = _editors[curtain.Id];
+                var isBusy = _busyItems.Contains(curtain.Id);
+
+                <article class="curtain-card">
+                    <div class="image-row">
+                        <img src="@curtain.PreviewUrl" alt="@($"{curtain.Name} preview")" />
+                        <img src="@curtain.PictureUrl" alt="@curtain.Name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input class="form-control" @bind="editor.Name" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" rows="3" @bind="editor.Description"></textarea>
+                    </div>
+
+                    <button class="secondary-button" @onclick="() => SaveDetailsAsync(curtain.Id)" disabled="@isBusy">Save details</button>
+
+                    <div class="upload-actions">
+                        <div class="form-group">
+                            <label>Change picture</label>
+                            <InputFile OnChange="e => OnPictureSelected(curtain.Id, e)" accept="image/*" />
+                            <button class="secondary-button" @onclick="() => SavePictureAsync(curtain.Id)" disabled="@isBusy">Update picture</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Change preview</label>
+                            <InputFile OnChange="e => OnPreviewSelected(curtain.Id, e)" accept="image/*" />
+                            <button class="secondary-button" @onclick="() => SavePreviewAsync(curtain.Id)" disabled="@isBusy">Update preview</button>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<CurtainDto> _curtains = [];
+    private readonly Dictionary<Guid, CurtainEditor> _editors = [];
+    private readonly HashSet<Guid> _busyItems = [];
+
+    private NewCurtainModel _newCurtain = new();
+    private IBrowserFile? _newPicture;
+    private IBrowserFile? _newPreview;
+    private bool _isLoading = true;
+    private bool _isCreating;
+    private string? _message;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurtainsAsync();
+    }
+
+    private async Task LoadCurtainsAsync()
+    {
+        _isLoading = true;
+        ClearMessages();
+
+        try
+        {
+            var items = await CurtainsApi.GetAllAsync();
+            _curtains.Clear();
+            _curtains.AddRange(items);
+
+            _editors.Clear();
+            foreach (var item in _curtains)
+            {
+                _editors[item.Id] = new CurtainEditor
+                {
+                    Name = item.Name,
+                    Description = item.Description
+                };
+            }
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to load curtains.";
+            Logger.LogError(exception, "Failed to load curtains.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnCreatePictureSelected(InputFileChangeEventArgs args) =>
+        _newPicture = args.File;
+
+    private void OnCreatePreviewSelected(InputFileChangeEventArgs args) =>
+        _newPreview = args.File;
+
+    private async Task CreateCurtainAsync()
+    {
+        ClearMessages();
+
+        if (string.IsNullOrWhiteSpace(_newCurtain.Name) ||
+            string.IsNullOrWhiteSpace(_newCurtain.Description) ||
+            _newPicture is null ||
+            _newPreview is null)
+        {
+            _errorMessage = "Name, description, picture and preview are required.";
+            return;
+        }
+
+        _isCreating = true;
+
+        try
+        {
+            await using var pictureStream = _newPicture.OpenReadStream(20 * 1024 * 1024);
+            await using var previewStream = _newPreview.OpenReadStream(20 * 1024 * 1024);
+
+            var picturePart = new StreamPart(pictureStream, _newPicture.Name, _newPicture.ContentType);
+            var previewPart = new StreamPart(previewStream, _newPreview.Name, _newPreview.ContentType);
+
+            await CurtainsApi.CreateAsync(picturePart, previewPart, _newCurtain.Name, _newCurtain.Description);
+
+            _newCurtain = new NewCurtainModel();
+            _newPicture = null;
+            _newPreview = null;
+
+            _message = "Curtain created.";
+            await LoadCurtainsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to create curtain.";
+            Logger.LogError(exception, "Failed to create curtain.");
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private async Task SaveDetailsAsync(Guid id)
+    {
+        if (!_editors.TryGetValue(id, out var editor))
+        {
+            return;
+        }
+
+        ClearMessages();
+        _busyItems.Add(id);
+
+        try
+        {
+            await CurtainsApi.UpdateNameAsync(id, new ChangeCurtainNameRequest(id, editor.Name));
+            await CurtainsApi.UpdateDescriptionAsync(id, new ChangeCurtainDescriptionRequest(id, editor.Description));
+
+            _message = "Details updated.";
+            await LoadCurtainsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to update details.";
+            Logger.LogError(exception, "Failed to update curtain details for {CurtainId}", id);
+        }
+        finally
+        {
+            _busyItems.Remove(id);
+        }
+    }
+
+    private void OnPictureSelected(Guid id, InputFileChangeEventArgs args)
+    {
+        if (_editors.TryGetValue(id, out var editor))
+        {
+            editor.Picture = args.File;
+        }
+    }
+
+    private void OnPreviewSelected(Guid id, InputFileChangeEventArgs args)
+    {
+        if (_editors.TryGetValue(id, out var editor))
+        {
+            editor.Preview = args.File;
+        }
+    }
+
+    private async Task SavePictureAsync(Guid id)
+    {
+        if (!_editors.TryGetValue(id, out var editor) || editor.Picture is null)
+        {
+            _errorMessage = "Select a picture first.";
+            return;
+        }
+
+        ClearMessages();
+        _busyItems.Add(id);
+
+        try
+        {
+            await using var stream = editor.Picture.OpenReadStream(20 * 1024 * 1024);
+            var picturePart = new StreamPart(stream, editor.Picture.Name, editor.Picture.ContentType);
+            await CurtainsApi.UpdatePictureAsync(id, picturePart);
+
+            editor.Picture = null;
+            _message = "Picture updated.";
+            await LoadCurtainsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to update picture.";
+            Logger.LogError(exception, "Failed to update picture for {CurtainId}", id);
+        }
+        finally
+        {
+            _busyItems.Remove(id);
+        }
+    }
+
+    private async Task SavePreviewAsync(Guid id)
+    {
+        if (!_editors.TryGetValue(id, out var editor) || editor.Preview is null)
+        {
+            _errorMessage = "Select a preview first.";
+            return;
+        }
+
+        ClearMessages();
+        _busyItems.Add(id);
+
+        try
+        {
+            await using var stream = editor.Preview.OpenReadStream(20 * 1024 * 1024);
+            var previewPart = new StreamPart(stream, editor.Preview.Name, editor.Preview.ContentType);
+            await CurtainsApi.UpdatePreviewAsync(id, previewPart);
+
+            editor.Preview = null;
+            _message = "Preview updated.";
+            await LoadCurtainsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to update preview.";
+            Logger.LogError(exception, "Failed to update preview for {CurtainId}", id);
+        }
+        finally
+        {
+            _busyItems.Remove(id);
+        }
+    }
+
+    private void ClearMessages()
+    {
+        _message = null;
+        _errorMessage = null;
+    }
+
+    private sealed class NewCurtainModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    private sealed class CurtainEditor
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public IBrowserFile? Picture { get; set; }
+        public IBrowserFile? Preview { get; set; }
+    }
+
+}

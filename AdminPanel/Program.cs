@@ -29,4 +29,9 @@ builder.Services.AddRefitClient<IIdentityApi>()
     .WithBaseAddress(url)
     .AddApiV1();
 
+builder.Services.AddRefitClient<ICurtainsApi>()
+    .WithBaseAddress(url)
+    .AddApiV1()
+    .AddJwtToken();
+
 await builder.Build().RunAsync();

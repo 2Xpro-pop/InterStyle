@@ -22,7 +22,7 @@ public readonly record struct PictureUrl
         
         var normalized = input.Trim();
         
-        if (!Uri.IsWellFormedUriString(normalized, UriKind.Absolute))
+        if (!Uri.IsWellFormedUriString(normalized, UriKind.RelativeOrAbsolute))
         {
             throw new ArgumentException("Invalid URL format.", nameof(input));
         }

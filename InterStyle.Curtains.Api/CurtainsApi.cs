@@ -1,4 +1,5 @@
-﻿using InterStyle.Curtains.Api.ViewModels;
+﻿using InterStyle.ApiShared.Auth;
+using InterStyle.Curtains.Api.ViewModels;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using MediatR;
@@ -20,8 +21,12 @@ public static class CurtainsApi
             [FromForm] CreateCurtainViewModel model,
             IHttpClientFactory httpClientFactory,
             IMediator mediator,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
+
             var client = httpClientFactory.CreateClient("ImageApi");
 
             Guid pictureId;
@@ -34,33 +39,35 @@ public static class CurtainsApi
             }
             catch (Exception)
             {
+                logger.LogError("Image service is unavailable.");
                 return Results.Problem(
                     title: "Image service is unavailable",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
-            var pictureUrl = new Uri(client.BaseAddress!, $"images/{pictureId}").ToString();
-            var previewUrl = new Uri(client.BaseAddress!, $"images/{previewId}").ToString();
+            var pictureUrl = $"/api/images/{pictureId}";
+            var previewUrl = $"/api/images/{previewId}";
 
             var id = await mediator.Send(
                 new CreateCurtainCommand(model.Name, model.Description, pictureUrl, previewUrl),
                 ct);
 
             return Results.Created($"/api/curtains/{id.Value}", new { id = id.Value });
-        }).DisableAntiforgery();
+        }).DisableAntiforgery()
+          .RequireAuthorization(InterStylePolicies.AdminOnly);
 
 
         api.MapGet("", async (ICurtainQueries queries, CancellationToken ct) =>
         {
             var result = await queries.GetAllAsync(ct);
             return Results.Ok(result);
-        });
+        }).AllowAnonymous();
 
         api.MapGet("{id:guid}", async (Guid id, ICurtainQueries queries, CancellationToken ct) =>
         {
             var result = await queries.GetByIdAsync(id, ct);
             return result is not null ? Results.Ok(result) : Results.NotFound();
-        });
+        }).AllowAnonymous();
 
         api.MapPut("{id:guid}/name", async (Guid id, ChangeCurtainNameCommand command, IMediator mediator, CancellationToken ct) =>
         {
@@ -71,7 +78,7 @@ public static class CurtainsApi
 
             await mediator.Send(command, ct);
             return Results.NoContent();
-        });
+        }).RequireAuthorization(InterStylePolicies.AdminOnly);
 
         api.MapPut("{id:guid}/description", async (Guid id, ChangeCurtainDescriptionCommand command, IMediator mediator, CancellationToken ct) =>
         {
@@ -82,7 +89,7 @@ public static class CurtainsApi
 
             await mediator.Send(command, ct);
             return Results.NoContent();
-        });
+        }).RequireAuthorization(InterStylePolicies.AdminOnly);
 
         api.MapPut("{id:guid}/picture", async (
             Guid id,
@@ -110,12 +117,13 @@ public static class CurtainsApi
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
-            var pictureUrl = new Uri(client.BaseAddress!, $"images/{imageId}").ToString();
+            var pictureUrl = $"/api/images/{imageId}";
 
             await mediator.Send(new ChangeCurtainPictureCommand(id, pictureUrl), ct);
 
             return Results.NoContent();
-        }).DisableAntiforgery();
+        }).DisableAntiforgery()
+          .RequireAuthorization(InterStylePolicies.AdminOnly);
 
         api.MapPut("{id:guid}/preview", async (
             Guid id,
@@ -143,12 +151,13 @@ public static class CurtainsApi
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
 
-            var previewUrl = new Uri(client.BaseAddress!, $"images/{imageId}").ToString();
+            var previewUrl = $"/api/images/{imageId}";
 
             await mediator.Send(new ChangeCurtainPreviewCommand(id, previewUrl), ct);
 
             return Results.NoContent();
-        }).DisableAntiforgery();
+        }).DisableAntiforgery()
+          .RequireAuthorization(InterStylePolicies.AdminOnly);
 
         return api;
     }

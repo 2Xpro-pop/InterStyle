@@ -1,4 +1,5 @@
 using InterStyle.ApiShared;
+using InterStyle.ApiShared.Auth;
 using InterStyle.Curtains.Api;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
@@ -31,9 +32,11 @@ builder.Services.AddScoped<ICurtainQueries, CurtainsQueries>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddInterStyleJwtAuth(builder.Configuration);
+
 builder.Services.AddHttpClient("ImageApi", client =>
 {
-    client.BaseAddress = new Uri("http://interstyle-imageapi", UriKind.Absolute);
+    client.BaseAddress = new Uri(builder.Configuration.GetRequiredValue("INTERSTYLE_IMAGEAPI_HTTP"), UriKind.Absolute);
 }).AddServiceDiscovery()
   .AddStandardResilienceHandler(options =>
   {

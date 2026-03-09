@@ -94,7 +94,7 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
         return expiresAtUtc <= DateTime.UtcNow;
     }
 
-    private sealed class JwtAuthenticationState(JwtSecurityToken token) : AuthenticationState(CreateClaimsPrincipal(token))
+    internal sealed class JwtAuthenticationState(JwtSecurityToken token) : AuthenticationState(CreateClaimsPrincipal(token))
     {
         public static readonly AuthenticationState NotAuthenticated =
             new(new ClaimsPrincipal(new ClaimsIdentity()));

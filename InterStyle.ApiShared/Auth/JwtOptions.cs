@@ -12,6 +12,8 @@ public sealed class JwtOptions
 
     public string? Authority { get; set; } = "http://interstyle-identityapi";
 
+    public string? PublicKey { get; set; }
+
     public JwtSigningOptions Signing { get; set; } = new();
 }
 

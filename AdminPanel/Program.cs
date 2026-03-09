@@ -34,4 +34,9 @@ builder.Services.AddRefitClient<ICurtainsApi>()
     .AddApiV1()
     .AddJwtToken();
 
+builder.Services.AddRefitClient<ILeadsApi>()
+    .WithBaseAddress(url)
+    .AddApiV1()
+    .AddJwtToken();
+
 await builder.Build().RunAsync();

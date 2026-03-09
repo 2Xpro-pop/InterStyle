@@ -1,3 +1,4 @@
+using InterStyle.ApiShared.Auth;
 using InterStyle.Leads.Application.Commands;
 using InterStyle.Leads.Application.Queries;
 using MediatR;
@@ -35,7 +36,7 @@ public static class LeadsApi
 
             var stats = await queries.GetStatisticsAsync(from, to, ct);
             return Results.Ok(stats);
-        });
+        }).RequireAuthorization(InterStylePolicies.AdminOnly);
 
         return api;
     }

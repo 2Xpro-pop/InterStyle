@@ -44,6 +44,7 @@ var jwtPfxPassword = builder.AddParameter("jwt-signing-password", secret: true);
 var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
 var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
+    .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithReference(leadsDb).WaitFor(leadsDb)
     .WithJwtAuthority(IdentityApiUrl);
 

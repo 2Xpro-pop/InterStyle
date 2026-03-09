@@ -1,4 +1,5 @@
 using InterStyle.ApiShared;
+using InterStyle.ApiShared.Auth;
 using InterStyle.Leads.Api;
 using InterStyle.Leads.Application.Commands;
 using InterStyle.Leads.Application.Queries;
@@ -25,6 +26,8 @@ builder.Services.AddDefaultDbContext<LeadsDbContext>(options =>
 var withApiVersioning = builder.Services.AddApiVersioning();
 
 builder.AddDefaultOpenApi(withApiVersioning);
+
+builder.Services.AddInterStyleJwtAuth(builder.Configuration);
 
 builder.Services.AddScoped<ILeadRepository, LeadRepository>();
 

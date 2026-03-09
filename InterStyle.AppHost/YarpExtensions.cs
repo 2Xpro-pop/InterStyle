@@ -3,6 +3,7 @@ using Aspire.Hosting.Yarp.Transforms;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Yarp.ReverseProxy.Configuration;
 
 namespace InterStyle.AppHost;
 
@@ -36,8 +37,8 @@ public static class YarpExtensions
             yarp.AddRoute("/api/curtains", curtainsCluster);
             yarp.AddRoute("/api/curtains/{*any}", curtainsCluster);
 
-            yarp.AddRoute("/api/images", imageCluster);
-            yarp.AddRoute("/api/images/{*any}", imageCluster);
+            yarp.AddRoute("/api/images/{id:guid}", imageCluster)
+                .WithMatchMethods("GET");
 
             yarp.AddRoute("/api/identity", identityCluster);
             yarp.AddRoute("/api/identity/{*any}", identityCluster);

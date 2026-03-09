@@ -52,6 +52,10 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-bar-chart-fill' viewBox='0 0 16 16'%3E%3Cpath d='M1 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 1 0 0-2H2V1a1 1 0 0 0-1-1z'/%3E%3Cpath d='M5 12a.5.5 0 0 1-.5-.5V7a.5.5 0 0 1 1 0v4.5A.5.5 0 0 1 5 12zm3 0a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 1 0v7.5A.5.5 0 0 1 8 12zm3 0a.5.5 0 0 1-.5-.5V6a.5.5 0 0 1 1 0v5.5a.5.5 0 0 1-.5.5z'/%3E%3C/svg%3E");
 }
 
+.bi-chat-left-text-fill-nav-menu {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-chat-left-text-fill' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M4.5 5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1z'/%3E%3C/svg%3E");
+}
+
 
 .nav-scrollable {
     padding: 14px 10px;

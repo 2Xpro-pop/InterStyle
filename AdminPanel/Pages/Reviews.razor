@@ -1,0 +1,201 @@
+@page "/reviews"
+@attribute [Authorize]
+
+@inject IReviewsApi ReviewsApi
+@inject ILogger<Reviews> Logger
+
+<PageTitle>Reviews</PageTitle>
+
+<div class="reviews-page">
+    <div class="reviews-header">
+        <h1>Reviews moderation</h1>
+        <button class="secondary-button" @onclick="LoadPendingAsync" disabled="@_isLoadingPending">
+            @(_isLoadingPending ? "Loading..." : "Refresh")
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="alert success">@_message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="alert error">@_errorMessage</div>
+    }
+
+    <section class="panel">
+        <h2>Statistics</h2>
+
+        <div class="filter-grid">
+            <div class="form-group">
+                <label>From (UTC)</label>
+                <InputDate class="form-control" @bind-Value="_fromDate" />
+            </div>
+
+            <div class="form-group">
+                <label>To (UTC)</label>
+                <InputDate class="form-control" @bind-Value="_toDate" />
+            </div>
+
+            <div class="actions">
+                <button class="primary-button" @onclick="LoadStatisticsAsync" disabled="@_isLoadingStats">
+                    @(_isLoadingStats ? "Loading..." : "Apply")
+                </button>
+            </div>
+        </div>
+
+        @if (_statistics is not null)
+        {
+            <div class="stats-grid">
+                <article class="stat-card"><span>Total</span><strong>@_statistics.Total</strong></article>
+                <article class="stat-card"><span>Average</span><strong>@_statistics.AverageRating.ToString("0.00")</strong></article>
+                <article class="stat-card"><span>1★</span><strong>@_statistics.Count1</strong></article>
+                <article class="stat-card"><span>2★</span><strong>@_statistics.Count2</strong></article>
+                <article class="stat-card"><span>3★</span><strong>@_statistics.Count3</strong></article>
+                <article class="stat-card"><span>4★</span><strong>@_statistics.Count4</strong></article>
+                <article class="stat-card"><span>5★</span><strong>@_statistics.Count5</strong></article>
+            </div>
+        }
+    </section>
+
+    <section class="panel pending-panel">
+        <h2>Pending reviews (@_pending.Count)</h2>
+
+        @if (_isLoadingPending)
+        {
+            <p>Loading pending reviews...</p>
+        }
+        else if (_pending.Count == 0)
+        {
+            <p>No pending reviews.</p>
+        }
+        else
+        {
+            <div class="review-list">
+                @foreach (var review in _pending)
+                {
+                    var isApproving = _approving.Contains(review.Id);
+
+                    <article class="review-card">
+                        <header>
+                            <h3>@review.CustomerName</h3>
+                            <span>@review.Rating★</span>
+                        </header>
+
+                        <p>@review.Comment</p>
+                        <small>Created: @review.CreatedAtUtc.ToString("u")</small>
+
+                        <button class="primary-button" @onclick="() => ApproveAsync(review.Id)" disabled="@isApproving">
+                            @(isApproving ? "Approving..." : "Approve")
+                        </button>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private readonly List<ReviewDto> _pending = [];
+    private readonly HashSet<Guid> _approving = [];
+
+    private ReviewStatisticsDto? _statistics;
+
+    private DateTime _fromDate = DateTime.UtcNow.Date.AddDays(-30);
+    private DateTime _toDate = DateTime.UtcNow.Date;
+
+    private bool _isLoadingPending;
+    private bool _isLoadingStats;
+
+    private string? _message;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPendingAsync();
+        await LoadStatisticsAsync();
+    }
+
+    private async Task LoadPendingAsync()
+    {
+        _isLoadingPending = true;
+        ClearMessages();
+
+        try
+        {
+            var items = await ReviewsApi.GetPendingAsync();
+            _pending.Clear();
+            _pending.AddRange(items);
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to load pending reviews.";
+            Logger.LogError(exception, "Failed to load pending reviews.");
+        }
+        finally
+        {
+            _isLoadingPending = false;
+        }
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        if (_fromDate > _toDate)
+        {
+            _errorMessage = "From date must be earlier than or equal to to date.";
+            return;
+        }
+
+        _isLoadingStats = true;
+        ClearMessages();
+
+        try
+        {
+            var fromUtc = new DateTimeOffset(DateTime.SpecifyKind(_fromDate, DateTimeKind.Utc));
+            var toUtc = new DateTimeOffset(DateTime.SpecifyKind(_toDate.AddDays(1), DateTimeKind.Utc));
+
+            _statistics = await ReviewsApi.GetStatisticsAsync(fromUtc, toUtc);
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to load review statistics.";
+            Logger.LogError(exception, "Failed to load review statistics.");
+        }
+        finally
+        {
+            _isLoadingStats = false;
+        }
+    }
+
+    private async Task ApproveAsync(Guid id)
+    {
+        _approving.Add(id);
+        ClearMessages();
+
+        try
+        {
+            await ReviewsApi.ApproveAsync(id);
+
+            _pending.RemoveAll(item => item.Id == id);
+            _message = "Review approved.";
+
+            await LoadStatisticsAsync();
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to approve review.";
+            Logger.LogError(exception, "Failed to approve review {ReviewId}.", id);
+        }
+        finally
+        {
+            _approving.Remove(id);
+        }
+    }
+
+    private void ClearMessages()
+    {
+        _message = null;
+        _errorMessage = null;
+    }
+}

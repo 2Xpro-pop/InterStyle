@@ -39,4 +39,9 @@ builder.Services.AddRefitClient<ILeadsApi>()
     .AddApiV1()
     .AddJwtToken();
 
+builder.Services.AddRefitClient<IReviewsApi>()
+    .WithBaseAddress(url)
+    .AddApiV1()
+    .AddJwtToken();
+
 await builder.Build().RunAsync();

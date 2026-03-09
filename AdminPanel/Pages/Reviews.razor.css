@@ -1,0 +1,151 @@
+.reviews-page {
+    color: #e2e8f0;
+    display: grid;
+    gap: 16px;
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .reviews-header h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+
+.panel {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 12px 0 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-control {
+    background: rgba(15, 23, 42, 0.95);
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.actions {
+    display: flex;
+    align-items: end;
+}
+
+.primary-button,
+.secondary-button {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.primary-button {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.secondary-button {
+    background: rgba(51, 65, 85, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+    .primary-button:disabled,
+    .secondary-button:disabled {
+        opacity: 0.6;
+    }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+    .stat-card span {
+        color: #94a3b8;
+    }
+
+    .stat-card strong {
+        font-size: 1.2rem;
+    }
+
+.pending-panel h2 {
+    margin-bottom: 12px;
+}
+
+.review-list {
+    display: grid;
+    gap: 12px;
+}
+
+.review-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+}
+
+    .review-card header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+    }
+
+    .review-card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .review-card p {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+
+    .review-card small {
+        color: #94a3b8;
+    }
+
+.alert {
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}

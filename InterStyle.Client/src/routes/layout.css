@@ -71,6 +71,22 @@ nav {
 	color: var(--muted);
 }
 
+.socials {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+}
+
+.socials a {
+	color: var(--muted);
+	transition: color 180ms ease;
+	line-height: 1;
+}
+
+.socials a:hover {
+	color: var(--accent);
+}
+
 .page {
 	flex: 1;
 	padding-top: 1.6rem;

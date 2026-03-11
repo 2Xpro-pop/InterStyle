@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CurtainCard from '$lib/components/CurtainCard.svelte';
+	import ReviewCard from '$lib/components/ReviewCard.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -62,13 +63,7 @@
 		</div>
 		<div class="grid reviews">
 			{#each data.reviews as review}
-				<article class="review">
-					<p class="rating" aria-label={`Оценка ${review.rating} из 5`}>
-						{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-					</p>
-					<p>"{review.comment}"</p>
-					<span>{review.customerName}</span>
-				</article>
+				<ReviewCard {review} />
 			{/each}
 		</div>
 	</section>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import ReviewCard from '$lib/components/ReviewCard.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -167,13 +168,7 @@
 		</div>
 		<div class="grid reviews">
 			{#each data.reviewsPage.items as review}
-				<article class="review">
-					<p class="rating" aria-label={`Оценка ${review.rating} из 5`}>
-						{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-					</p>
-					<p>"{review.comment}"</p>
-					<span>{review.customerName}</span>
-				</article>
+				<ReviewCard {review} />
 			{/each}
 		</div>
 

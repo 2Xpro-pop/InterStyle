@@ -38,8 +38,8 @@
 		},
 		"telephone": "+996550123456",
 		"sameAs": [
-			"https://www.instagram.com/interstyle.kg/",
-			"https://2gis.kg/osh/search/InterStyle"
+			"https://www.instagram.com/interstyle__osh",
+			"https://go.2gis.com/mdfKi"
 		]
 	})}</script>`}
 </svelte:head>

@@ -1,5 +1,7 @@
+using InterStyle.Reviews.Api.Services;
 using InterStyle.Reviews.Application.Commands;
 using InterStyle.Reviews.Application.Queries;
+using InterStyle.Reviews.Domain;
 using MediatR;
 
 namespace InterStyle.Reviews.Api;
@@ -12,8 +14,18 @@ public static class ReviewsApi
             .HasApiVersion(1.0)
             .WithTags("Reviews");
 
-        api.MapPost("", async (SubmitReviewCommand command, IMediator mediator, CancellationToken ct) =>
+        api.MapPost("", async (
+            SubmitReviewViewModel request, 
+            IMediator mediator, 
+            ICaptchaValidator captchaValidator,
+            CancellationToken ct) =>
         {
+            if (!await captchaValidator.ValidateAsync(request.CaptchaToken, ct))
+            {
+                return Results.BadRequest(new { error = "Invalid captcha token." });
+            }
+
+            var command = new SubmitReviewCommand(request.CustomerName, request.Rating, request.Comment);
             var reviewId = await mediator.Send(command, ct);
             return Results.Created($"/reviews/{reviewId.Value}", new { id = reviewId.Value });
         });
@@ -62,3 +74,9 @@ public static class ReviewsApi
         return api;
     }
 }
+
+file sealed record class SubmitReviewViewModel(
+    string CustomerName,
+    int Rating,
+    string Comment,
+    string CaptchaToken);

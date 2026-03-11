@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.Yarp;
 using Aspire.Hosting.Yarp.Transforms;
+using Aspire.Hosting.JavaScript;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,7 +17,8 @@ public static class YarpExtensions
         IResourceBuilder<ProjectResource> curtainsApi,
         IResourceBuilder<ProjectResource> imageApi,
         IResourceBuilder<ProjectResource> identityApi,
-        IResourceBuilder<ProjectResource> adminPanel
+        IResourceBuilder<ProjectResource> adminPanel,
+        IResourceBuilder<Aspire.Hosting.JavaScript.ViteAppResource> clientApp
         )
     {
         return builder.WithConfiguration(yarp =>
@@ -27,6 +29,7 @@ public static class YarpExtensions
             var imageCluster = yarp.AddCluster(imageApi);
             var identityCluster = yarp.AddCluster(identityApi);
             var adminPanelCluster = yarp.AddCluster(adminPanel);
+            var clientAppCluster = yarp.AddCluster(clientApp);
 
             yarp.AddRoute("/api/leads", leadsCluster);
             yarp.AddRoute("/api/leads/{*any}", leadsCluster);
@@ -47,6 +50,8 @@ public static class YarpExtensions
 
             yarp.AddRoute("/admin/{**catch-all}", adminPanelCluster)
                 .WithTransformPathRemovePrefix("/admin");
+
+            yarp.AddRoute("/{**catch-all}", clientAppCluster);
         });
     }
 }

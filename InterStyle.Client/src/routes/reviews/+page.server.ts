@@ -2,6 +2,8 @@ import { resolveReviewsService } from '$lib/ioc/reviewsServiceResolver';
 import type { IReviewsService } from '$lib/services/IReviewsService';
 import { env } from '$env/dynamic/public';
 import { fail } from '@sveltejs/kit';
+import { defaultLocale, isLocale } from '$lib/i18n/locale';
+import { t } from '$lib/i18n/translations';
 
 export const prerender = false;
 
@@ -36,7 +38,10 @@ export async function load({ fetch, url }) {
 }
 
 export const actions = {
-	default: async ({ request, fetch }) => {
+	default: async ({ request, fetch, url }) => {
+		const raw = url.searchParams.get('lang') ?? '';
+		const locale = isLocale(raw) ? raw : defaultLocale;
+
 		const formData = await request.formData();
 		const customerName = (formData.get('customerName') as string ?? '').trim();
 		const ratingStr = formData.get('rating') as string ?? '';
@@ -46,24 +51,24 @@ export const actions = {
 		const errors: Record<string, string> = {};
 
 		if (!customerName || customerName.length < 2) {
-			errors.customerName = 'Имя должно содержать минимум 2 символа.';
+			errors.customerName = t(locale, 'validation.nameMin');
 		} else if (customerName.length > 100) {
-			errors.customerName = 'Имя не должно превышать 100 символов.';
+			errors.customerName = t(locale, 'validation.nameMax');
 		}
 
 		const rating = Number.parseInt(ratingStr, 10);
 		if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-			errors.rating = 'Оценка должна быть от 1 до 5.';
+			errors.rating = t(locale, 'validation.ratingRange');
 		}
 
 		if (!comment || comment.length < 5) {
-			errors.comment = 'Комментарий должен содержать минимум 5 символов.';
+			errors.comment = t(locale, 'validation.commentMin');
 		} else if (comment.length > 2000) {
-			errors.comment = 'Комментарий не должен превышать 2000 символов.';
+			errors.comment = t(locale, 'validation.commentMax');
 		}
 
 		if (!captchaToken) {
-			errors.captcha = 'Подтвердите, что вы не робот.';
+			errors.captcha = t(locale, 'validation.captcha');
 		}
 
 		if (Object.keys(errors).length > 0) {
@@ -76,7 +81,7 @@ export const actions = {
 			return { success: true };
 		} catch {
 			return fail(500, {
-				errors: { form: 'Не удалось отправить отзыв. Попробуйте позже.' } as Record<string, string>,
+				errors: { form: t(locale, 'validation.submitError') } as Record<string, string>,
 				customerName,
 				rating: ratingStr,
 				comment

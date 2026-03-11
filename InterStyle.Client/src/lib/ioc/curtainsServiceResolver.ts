@@ -11,12 +11,12 @@ class FallbackCurtainsService implements ICurtainsService {
 		private readonly fallback: ICurtainsService
 	) {}
 
-	async getAllCurtains(fetchFn: typeof fetch) {
+	async getAllCurtains(fetchFn: typeof fetch, culture?: string) {
 		try {
-			const curtains = await this.primary.getAllCurtains(fetchFn);
-			return curtains.length > 0 ? curtains : this.fallback.getAllCurtains(fetchFn);
+			const curtains = await this.primary.getAllCurtains(fetchFn, culture);
+			return curtains.length > 0 ? curtains : this.fallback.getAllCurtains(fetchFn, culture);
 		} catch {
-			return this.fallback.getAllCurtains(fetchFn);
+			return this.fallback.getAllCurtains(fetchFn, culture);
 		}
 	}
 }

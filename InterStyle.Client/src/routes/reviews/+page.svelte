@@ -1,14 +1,24 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
+	import { t } from '$lib/i18n/translations';
+	import type { Locale } from '$lib/i18n/locale';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const locale = () => (page.data as { locale: Locale }).locale;
+
+	const langParam = () => {
+		const lang = (page.data as { locale: Locale }).locale;
+		return lang === 'ru' ? '' : `&lang=${lang}`;
+	};
+
 	const prevHref = () =>
-		`/reviews?page=${data.reviewsPage.page - 1}&pageSize=${data.reviewsPage.pageSize}`;
+		`/reviews?page=${data.reviewsPage.page - 1}&pageSize=${data.reviewsPage.pageSize}${langParam()}`;
 	const nextHref = () =>
-		`/reviews?page=${data.reviewsPage.page + 1}&pageSize=${data.reviewsPage.pageSize}`;
+		`/reviews?page=${data.reviewsPage.page + 1}&pageSize=${data.reviewsPage.pageSize}${langParam()}`;
 
 	let selectedRating = $state(0);
 	let hoveredRating = $state(0);
@@ -16,18 +26,12 @@
 </script>
 
 <svelte:head>
-	<title>Отзывы клиентов - InterStyle</title>
-	<meta
-		name="description"
-		content="Отзывы клиентов InterStyle о пошиве и установке занавесок. Реальные оценки и комментарии."
-	/>
+	<title>{t(locale(), 'reviews.title')}</title>
+	<meta name="description" content={t(locale(), 'reviews.metaDescription')} />
 	<link rel="canonical" href="https://interstyle.kg/reviews" />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Отзывы клиентов - InterStyle" />
-	<meta
-		property="og:description"
-		content="Реальные отзывы клиентов о пошиве занавесок и сервисе InterStyle."
-	/>
+	<meta property="og:title" content={t(locale(), 'reviews.ogTitle')} />
+	<meta property="og:description" content={t(locale(), 'reviews.ogDescription')} />
 	<meta property="og:url" content="https://interstyle.kg/reviews" />
 	{#if data.recaptchaSiteKey}
 		<script src="https://www.google.com/recaptcha/api.js?render={data.recaptchaSiteKey}"></script>
@@ -36,20 +40,20 @@
 
 <main class="container page">
 	<section class="hero compact">
-		<p class="tag">Отзывы</p>
-		<h1>Отзывы наших клиентов</h1>
-		<p>Публикуем только одобренные отзывы из сервиса InterStyle.Reviews.Api.</p>
-		<a class="btn ghost" href="/">Вернуться на главную</a>
+		<p class="tag">{t(locale(), 'reviews.tag')}</p>
+		<h1>{t(locale(), 'reviews.heading')}</h1>
+		<p>{t(locale(), 'reviews.heroText')}</p>
+		<a class="btn ghost" href="/">{t(locale(), 'reviews.backHome')}</a>
 	</section>
 
 	<section class="section">
 		<div class="section-head">
-			<h2>Оставить отзыв</h2>
+			<h2>{t(locale(), 'reviews.submitHeading')}</h2>
 		</div>
 
 		{#if form?.success}
 			<div class="form-message success">
-				Спасибо за ваш отзыв! Он будет опубликован после модерации.
+				{t(locale(), 'reviews.successMessage')}
 			</div>
 		{/if}
 
@@ -94,12 +98,12 @@
 			class="review-form"
 		>
 			<div class="form-field">
-				<label for="customerName">Ваше имя</label>
+				<label for="customerName">{t(locale(), 'reviews.nameLabel')}</label>
 				<input
 					type="text"
 					id="customerName"
 					name="customerName"
-					placeholder="Как вас зовут?"
+					placeholder={t(locale(), 'reviews.namePlaceholder')}
 					minlength="2"
 					maxlength="100"
 					required
@@ -111,14 +115,14 @@
 			</div>
 
 			<div class="form-field">
-				<label for="rating">Оценка</label>
-				<div class="star-picker" role="radiogroup" aria-label="Выберите оценку">
+				<label for="rating">{t(locale(), 'reviews.ratingLabel')}</label>
+				<div class="star-picker" role="radiogroup" aria-label={t(locale(), 'reviews.ratingAriaLabel')}>
 					{#each [1, 2, 3, 4, 5] as star}
 						<button
 							type="button"
 							class="star-btn"
 							class:active={star <= (hoveredRating || selectedRating)}
-							aria-label={`${star} из 5`}
+							aria-label={`${star} / 5`}
 							onmouseenter={() => (hoveredRating = star)}
 							onmouseleave={() => (hoveredRating = 0)}
 							onclick={() => (selectedRating = star)}
@@ -134,11 +138,11 @@
 			</div>
 
 			<div class="form-field">
-				<label for="comment">Комментарий</label>
+				<label for="comment">{t(locale(), 'reviews.commentLabel')}</label>
 				<textarea
 					id="comment"
 					name="comment"
-					placeholder="Расскажите о вашем опыте..."
+					placeholder={t(locale(), 'reviews.commentPlaceholder')}
 					rows="4"
 					minlength="5"
 					maxlength="2000"
@@ -153,17 +157,16 @@
 			{/if}
 
 			<button type="submit" class="btn" disabled={submitting}>
-				{submitting ? 'Отправка...' : 'Отправить отзыв'}
+				{submitting ? t(locale(), 'reviews.submitting') : t(locale(), 'reviews.submitBtn')}
 			</button>
 		</form>
 	</section>
 
 	<section class="section">
 		<div class="section-head">
-			<h2>Все отзывы</h2>
+			<h2>{t(locale(), 'reviews.allHeading')}</h2>
 			<p>
-				Страница {data.reviewsPage.page} из {data.reviewsPage.totalPages} · Всего:
-				{data.reviewsPage.totalCount}
+				{t(locale(), 'reviews.pageOf', { page: data.reviewsPage.page, total: data.reviewsPage.totalPages })} · {t(locale(), 'reviews.totalCount', { count: data.reviewsPage.totalCount })}
 			</p>
 		</div>
 		<div class="grid reviews">
@@ -172,17 +175,17 @@
 			{/each}
 		</div>
 
-		<div class="pager" aria-label="Навигация по страницам отзывов">
+		<div class="pager" aria-label="Pagination">
 			{#if data.reviewsPage.hasPreviousPage}
-				<a class="btn ghost" href={prevHref()}>Назад</a>
+				<a class="btn ghost" href={prevHref()}>{t(locale(), 'reviews.prev')}</a>
 			{:else}
-				<span class="btn ghost disabled" aria-disabled="true">Назад</span>
+				<span class="btn ghost disabled" aria-disabled="true">{t(locale(), 'reviews.prev')}</span>
 			{/if}
 
 			{#if data.reviewsPage.hasNextPage}
-				<a class="btn ghost" href={nextHref()}>Вперед</a>
+				<a class="btn ghost" href={nextHref()}>{t(locale(), 'reviews.next')}</a>
 			{:else}
-				<span class="btn ghost disabled" aria-disabled="true">Вперед</span>
+				<span class="btn ghost disabled" aria-disabled="true">{t(locale(), 'reviews.next')}</span>
 			{/if}
 		</div>
 	</section>

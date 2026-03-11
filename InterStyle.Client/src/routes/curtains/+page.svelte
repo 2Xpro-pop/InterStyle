@@ -1,32 +1,31 @@
 <script lang="ts">
 	import CurtainCard from '$lib/components/CurtainCard.svelte';
+	import { t } from '$lib/i18n/translations';
+	import { page } from '$app/state';
+	import type { Locale } from '$lib/i18n/locale';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const locale = () => (page.data as { locale: Locale }).locale;
 </script>
 
 <svelte:head>
-	<title>Каталог занавесок - InterStyle</title>
-	<meta
-		name="description"
-		content="Каталог возможных занавесок InterStyle. Выберите стиль и получите индивидуальный расчет стоимости."
-	/>
+	<title>{t(locale(), 'curtains.title')}</title>
+	<meta name="description" content={t(locale(), 'curtains.metaDescription')} />
 	<link rel="canonical" href="https://interstyle.kg/curtains" />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Каталог занавесок - InterStyle" />
-	<meta
-		property="og:description"
-		content="Все варианты занавесок с индивидуальным пошивом и подбором ткани."
-	/>
+	<meta property="og:title" content={t(locale(), 'curtains.title')} />
+	<meta property="og:description" content={t(locale(), 'curtains.ogDescription')} />
 	<meta property="og:url" content="https://interstyle.kg/curtains" />
 </svelte:head>
 
 <main class="container page">
 	<section class="hero compact">
-		<p class="tag">Каталог</p>
-		<h1>Все возможные занавески</h1>
-		<p>Выберите стиль и напишите нам для индивидуального расчета стоимости.</p>
-		<a class="btn ghost" href="/">Вернуться на главную</a>
+		<p class="tag">{t(locale(), 'curtains.tag')}</p>
+		<h1>{t(locale(), 'curtains.heading')}</h1>
+		<p>{t(locale(), 'curtains.heroText')}</p>
+		<a class="btn ghost" href="/">{t(locale(), 'curtains.backHome')}</a>
 	</section>
 
 	<section class="section">

@@ -87,6 +87,30 @@ nav {
 	color: var(--accent);
 }
 
+.header-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+
+.locale-btn {
+	background: transparent;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 0.3rem 0.6rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--muted);
+	cursor: pointer;
+	font-family: inherit;
+	transition: color 180ms ease, border-color 180ms ease;
+}
+
+.locale-btn:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
 .page {
 	flex: 1;
 	padding-top: 1.6rem;

@@ -1,41 +1,38 @@
 <script lang="ts">
 	import CurtainCard from '$lib/components/CurtainCard.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
+	import { t } from '$lib/i18n/translations';
+	import { page } from '$app/state';
+	import type { Locale } from '$lib/i18n/locale';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const locale = () => (page.data as { locale: Locale }).locale;
 </script>
 
 <svelte:head>
-	<title>InterStyle - Пошив занавесок от Оша до Кочкор-Ата</title>
-	<meta
-		name="description"
-		content="Индивидуальный пошив занавесок в Кыргызстане: подбор ткани, аккуратный монтаж и расчет цены под ваш интерьер."
-	/>
+	<title>{t(locale(), 'home.title')}</title>
+	<meta name="description" content={t(locale(), 'home.metaDescription')} />
 	<link rel="canonical" href="https://interstyle.kg/" />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="InterStyle - Пошив занавесок от Оша до Кочкор-Ата" />
-	<meta
-		property="og:description"
-		content="Индивидуальный пошив занавесок с расчетом цены под ваш проект."
-	/>
+	<meta property="og:title" content={t(locale(), 'home.title')} />
+	<meta property="og:description" content={t(locale(), 'home.ogDescription')} />
 	<meta property="og:url" content="https://interstyle.kg/" />
 </svelte:head>
 
 <main class="container page">
 	<section class="hero">
 		<p class="tag">InterStyle</p>
-		<h1>Вешаем зановески от Оша до Кочкор-Ата</h1>
-		<p>
-			Индивидуальный пошив, аккуратный монтаж и подбор ткани под ваш интерьер.
-		</p>
-		<a class="btn" href="/curtains">Смотреть все занавески</a>
+		<h1>{t(locale(), 'home.heroHeading')}</h1>
+		<p>{t(locale(), 'home.heroText')}</p>
+		<a class="btn" href="/curtains">{t(locale(), 'home.heroCta')}</a>
 	</section>
 
 	<section class="section">
 		<div class="section-head">
-			<h2>Популярные занавески</h2>
-			<a href="/curtains">Весь каталог</a>
+			<h2>{t(locale(), 'home.popularHeading')}</h2>
+			<a href="/curtains">{t(locale(), 'home.catalogLink')}</a>
 		</div>
 		<div class="grid cards">
 			{#each data.curtains as curtain}
@@ -45,21 +42,15 @@
 	</section>
 
 	<section class="section notice">
-		<h2>Почему нет фиксированной цены</h2>
-		<p>
-			Цена рассчитывается индивидуально: размеры окон, выбранная ткань, тип пошива,
-			дополнительные декорации и сложность монтажа всегда разные.
-		</p>
-		<p>
-			Чтобы узнать точную стоимость, напишите нам в WhatsApp или Instagram, и мы
-			подготовим расчет.
-		</p>
+		<h2>{t(locale(), 'home.pricingHeading')}</h2>
+		<p>{t(locale(), 'home.pricingText1')}</p>
+		<p>{t(locale(), 'home.pricingText2')}</p>
 	</section>
 
 	<section class="section">
 		<div class="section-head">
-			<h2>Отзывы</h2>
-			<a href="/reviews">Все отзывы</a>
+			<h2>{t(locale(), 'home.reviewsHeading')}</h2>
+			<a href="/reviews">{t(locale(), 'home.allReviewsLink')}</a>
 		</div>
 		<div class="grid reviews">
 			{#each data.reviews as review}
@@ -69,7 +60,7 @@
 	</section>
 
 	<section class="section contacts">
-		<h2>Контакты</h2>
+		<h2>{t(locale(), 'home.contactsHeading')}</h2>
 		<ul>
 			<li><a href="https://wa.me/996700000000" target="_blank" rel="noreferrer">WhatsApp</a></li>
 			<li><a href="https://instagram.com/interstyle.kg" target="_blank" rel="noreferrer">Instagram</a></li>

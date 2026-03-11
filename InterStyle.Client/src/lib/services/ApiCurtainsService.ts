@@ -28,8 +28,12 @@ function mapApiCurtain(item: CurtainApiDto, index: number): Curtain {
 export class ApiCurtainsService implements ICurtainsService {
 	constructor(private readonly baseUrl: string) {}
 
-	async getAllCurtains(fetchFn: typeof fetch): Promise<Curtain[]> {
-		const response = await fetchFn(`${this.baseUrl}/api/curtains`);
+	async getAllCurtains(fetchFn: typeof fetch, culture?: string): Promise<Curtain[]> {
+		const url = new URL(`${this.baseUrl}/api/curtains`);
+		if (culture) {
+			url.searchParams.set('culture', culture);
+		}
+		const response = await fetchFn(url.toString());
 		if (!response.ok) {
 			throw new Error('Curtains API is unavailable');
 		}

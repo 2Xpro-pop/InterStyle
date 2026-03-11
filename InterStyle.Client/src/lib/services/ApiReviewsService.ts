@@ -45,15 +45,17 @@ export class ApiReviewsService implements IReviewsService {
 	): Promise<ReviewPage> {
 		const safePage = Math.max(1, page);
 		const safePageSize = Math.max(1, pageSize);
-		const response = await fetchFn(
-			`${this.baseUrl}/api/reviews?api-version=1.0&page=${safePage}&pageSize=${safePageSize}`
-		);
+		const reqUrl = `${this.baseUrl}/api/reviews?api-version=1.0&page=${safePage}&pageSize=${safePageSize}`;
+		console.log(`[ReviewsAPI] GET ${reqUrl}`);
+		const response = await fetchFn(reqUrl);
 
 		if (!response.ok) {
+			console.error(`[ReviewsAPI] ${response.status} ${response.statusText}`);
 			throw new Error('Reviews API is unavailable');
 		}
 
 		const payload = (await response.json()) as PagedResultDto<ReviewApiDto>;
+		console.log(`[ReviewsAPI] OK, ${payload.items?.length ?? 0} items, total: ${payload.totalCount ?? '?'}`);
 		const items = Array.isArray(payload.items) ? payload.items : [];
 		const totalCount = typeof payload.totalCount === 'number' ? payload.totalCount : items.length;
 		const currentPage = typeof payload.page === 'number' ? payload.page : safePage;
@@ -72,17 +74,21 @@ export class ApiReviewsService implements IReviewsService {
 	}
 
 	async submitReview(fetchFn: typeof fetch, request: SubmitReviewRequest): Promise<{ id: string }> {
-		const response = await fetchFn(`${this.baseUrl}/api/reviews?api-version=1.0`, {
+		const reqUrl = `${this.baseUrl}/api/reviews?api-version=1.0`;
+		console.log(`[ReviewsAPI] POST ${reqUrl}`);
+		const response = await fetchFn(reqUrl, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(request)
 		});
 
 		if (!response.ok) {
+			console.error(`[ReviewsAPI] POST failed: ${response.status} ${response.statusText}`);
 			throw new Error('Не удалось отправить отзыв');
 		}
 
 		const data = await response.json();
+		console.log(`[ReviewsAPI] Review created: ${data.id ?? 'no-id'}`);
 		return { id: data.id ?? '' };
 	}
 }

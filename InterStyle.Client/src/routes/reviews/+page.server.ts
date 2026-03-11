@@ -78,8 +78,10 @@ export const actions = {
 		try {
 			const reviewsService = resolveReviewsService();
 			await reviewsService.submitReview(fetch, { customerName, rating, comment, captchaToken });
+			console.log(`[Reviews] Review submitted by "${customerName}"`);
 			return { success: true };
-		} catch {
+		} catch (err) {
+			console.error('[Reviews] Submit failed:', err instanceof Error ? err.message : err);
 			return fail(500, {
 				errors: { form: t(locale, 'validation.submitError') } as Record<string, string>,
 				customerName,

@@ -14,8 +14,12 @@ class FallbackCurtainsService implements ICurtainsService {
 	async getAllCurtains(fetchFn: typeof fetch, culture?: string) {
 		try {
 			const curtains = await this.primary.getAllCurtains(fetchFn, culture);
+			if (curtains.length === 0) {
+				console.warn('[CurtainsService] API returned empty, falling back to mock');
+			}
 			return curtains.length > 0 ? curtains : this.fallback.getAllCurtains(fetchFn, culture);
-		} catch {
+		} catch (err) {
+			console.error('[CurtainsService] API failed, using mock:', err instanceof Error ? err.message : err);
 			return this.fallback.getAllCurtains(fetchFn, culture);
 		}
 	}
@@ -26,11 +30,16 @@ export function resolveCurtainsService(): ICurtainsService {
 		return cachedService;
 	}
 
-	const apiUrl = env.PUBLIC_CURTAINS_API_URL;
+	const apiUrl = env.PUBLIC_API_GATEWAY_URL;
 	const mockService = new MockCurtainsService();
-	cachedService = apiUrl
-		? new FallbackCurtainsService(new ApiCurtainsService(apiUrl), mockService)
-		: mockService;
+
+	if (apiUrl) {
+		console.log(`[CurtainsService] Using API gateway: ${apiUrl}`);
+		cachedService = new FallbackCurtainsService(new ApiCurtainsService(apiUrl), mockService);
+	} else {
+		console.warn('[CurtainsService] PUBLIC_API_GATEWAY_URL not set, using mock');
+		cachedService = mockService;
+	}
 
 	return cachedService;
 }

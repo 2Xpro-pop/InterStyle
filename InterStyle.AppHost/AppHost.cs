@@ -44,6 +44,7 @@ var jwtPfxPassword = builder.AddParameter("jwt-signing-password", secret: true);
 var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
 var captchaGoogleToken = builder.AddParameter("captcha-google-token", secret: true);
+var captchaGoogleSiteKey = builder.AddParameter("captcha-google-site-key", "6LdKtoYsAAAAANvmYl4ew2_nQdQzKsb1v3u6eKCk", secret: false);
 
 var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
@@ -71,8 +72,13 @@ var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityAp
 
 var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel");
 
-builder.AddYarp("interstyle-gateway")
-    .WithExternalHttpEndpoints()
-    .ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel);
+var gateway = builder.AddYarp("interstyle-gateway")
+    .WithExternalHttpEndpoints();
+
+var client = builder.AddViteApp("interstyle-client", "../InterStyle.Client")
+    .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
+    .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey);
+
+gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client);
 
 builder.Build().Run();

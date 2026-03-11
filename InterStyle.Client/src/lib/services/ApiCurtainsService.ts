@@ -34,12 +34,15 @@ export class ApiCurtainsService implements ICurtainsService {
 		if (culture) {
 			url.searchParams.set('culture', culture);
 		}
+		console.log(`[CurtainsAPI] GET ${url}`);
 		const response = await fetchFn(url.toString());
 		if (!response.ok) {
+			console.error(`[CurtainsAPI] ${response.status} ${response.statusText}`);
 			throw new Error('Curtains API is unavailable');
 		}
 
 		const payload = (await response.json()) as CurtainApiDto[];
+		console.log(`[CurtainsAPI] OK, ${Array.isArray(payload) ? payload.length : 0} items`);
 		if (!Array.isArray(payload) || payload.length === 0) {
 			return [];
 		}

@@ -30,6 +30,7 @@ export class ApiCurtainsService implements ICurtainsService {
 
 	async getAllCurtains(fetchFn: typeof fetch, culture?: string): Promise<Curtain[]> {
 		const url = new URL(`${this.baseUrl}/api/curtains`);
+		url.searchParams.set('api-version', '1.0');
 		if (culture) {
 			url.searchParams.set('culture', culture);
 		}

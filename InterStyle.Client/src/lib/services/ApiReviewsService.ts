@@ -46,7 +46,7 @@ export class ApiReviewsService implements IReviewsService {
 		const safePage = Math.max(1, page);
 		const safePageSize = Math.max(1, pageSize);
 		const response = await fetchFn(
-			`${this.baseUrl}/api/reviews?page=${safePage}&pageSize=${safePageSize}`
+			`${this.baseUrl}/api/reviews?api-version=1.0&page=${safePage}&pageSize=${safePageSize}`
 		);
 
 		if (!response.ok) {
@@ -72,7 +72,7 @@ export class ApiReviewsService implements IReviewsService {
 	}
 
 	async submitReview(fetchFn: typeof fetch, request: SubmitReviewRequest): Promise<{ id: string }> {
-		const response = await fetchFn(`${this.baseUrl}/api/reviews`, {
+		const response = await fetchFn(`${this.baseUrl}/api/reviews?api-version=1.0`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(request)

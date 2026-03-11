@@ -12,6 +12,11 @@ export const cultureCodes: Record<Locale, string> = {
 	kg: 'kg-KG'
 };
 
+export const htmlLangCodes: Record<Locale, string> = {
+	ru: 'ru',
+	kg: 'ky'
+};
+
 export function isLocale(value: string): value is Locale {
 	return value === 'ru' || value === 'kg';
 }

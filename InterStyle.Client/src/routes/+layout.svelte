@@ -2,7 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { t } from '$lib/i18n/translations';
-	import { localeNames, defaultLocale } from '$lib/i18n/locale';
+	import { localeNames, defaultLocale, htmlLangCodes } from '$lib/i18n/locale';
 	import type { Locale } from '$lib/i18n/locale';
 	import { page } from '$app/state';
 	import type { LayoutData } from './$types';
@@ -23,7 +23,19 @@
 	};
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href={favicon} />
+	<meta property="og:site_name" content="InterStyle" />
+	<meta property="og:locale" content={data.locale === 'ru' ? 'ru_RU' : 'ky_KG'} />
+	<meta property="og:image" content="https://interstyle.kg/og-image.jpg" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:image" content="https://interstyle.kg/og-image.jpg" />
+	<link rel="alternate" hreflang="ru" href="https://interstyle.kg{page.url.pathname}" />
+	<link rel="alternate" hreflang="ky" href="https://interstyle.kg{page.url.pathname}?lang=kg" />
+	<link rel="alternate" hreflang="x-default" href="https://interstyle.kg{page.url.pathname}" />
+</svelte:head>
 
 <div class="site-shell">
 	<header class="site-header">

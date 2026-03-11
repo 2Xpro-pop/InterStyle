@@ -19,6 +19,29 @@
 	<meta property="og:title" content={t(locale(), 'home.title')} />
 	<meta property="og:description" content={t(locale(), 'home.ogDescription')} />
 	<meta property="og:url" content="https://interstyle.kg/" />
+	{@html `<script type="application/ld+json">${JSON.stringify({
+		"@context": "https://schema.org",
+		"@type": "LocalBusiness",
+		"name": "InterStyle",
+		"description": t(locale(), 'home.metaDescription'),
+		"url": "https://interstyle.kg",
+		"image": "https://interstyle.kg/og-image.jpg",
+		"address": {
+			"@type": "PostalAddress",
+			"addressLocality": "Ош",
+			"addressCountry": "KG"
+		},
+		"geo": {
+			"@type": "GeoCoordinates",
+			"latitude": 40.5283,
+			"longitude": 72.7985
+		},
+		"telephone": "+996550123456",
+		"sameAs": [
+			"https://www.instagram.com/interstyle.kg/",
+			"https://2gis.kg/osh/search/InterStyle"
+		]
+	})}</script>`}
 </svelte:head>
 
 <main class="container page">

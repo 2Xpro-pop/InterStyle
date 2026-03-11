@@ -55,4 +55,6 @@ jobs:
           Parameters__jwt-signing-password: ${{ secrets.JWT_SIGNING_PASSWORD }}
           Parameters__jwt-active-kid: main
 
+          Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
+
         run: aspire do push --log-level debug

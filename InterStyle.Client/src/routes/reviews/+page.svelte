@@ -11,6 +11,7 @@
 
 	let selectedRating = $state(0);
 	let hoveredRating = $state(0);
+	let submitting = $state(false);
 </script>
 
 <svelte:head>
@@ -27,6 +28,9 @@
 		content="Реальные отзывы клиентов о пошиве занавесок и сервисе InterStyle."
 	/>
 	<meta property="og:url" content="https://interstyle.kg/reviews" />
+	{#if data.recaptchaSiteKey}
+		<script src="https://www.google.com/recaptcha/api.js?render={data.recaptchaSiteKey}"></script>
+	{/if}
 </svelte:head>
 
 <main class="container page">
@@ -52,7 +56,42 @@
 			<div class="form-message error">{form.errors.form}</div>
 		{/if}
 
-		<form method="POST" use:enhance class="review-form">
+		<form
+			method="POST"
+			use:enhance={async ({ formData, cancel }) => {
+				submitting = true;
+
+				if (data.recaptchaSiteKey && typeof (window as any).grecaptcha !== 'undefined') {
+					try {
+						const rc = (window as any).grecaptcha;
+						const token = await new Promise<string>((resolve, reject) => {
+							rc.ready(async () => {
+								try {
+									const t = await rc.execute(data.recaptchaSiteKey, {
+										action: 'submit_review'
+									});
+									resolve(t);
+								} catch (e: unknown) {
+									reject(e);
+								}
+							});
+						});
+						formData.set('captchaToken', token);
+					} catch {
+						formData.set('captchaToken', '');
+					}
+				}
+
+				return async ({ update }) => {
+					await update();
+					submitting = false;
+					if (form?.success) {
+						selectedRating = 0;
+					}
+				};
+			}}
+			class="review-form"
+		>
 			<div class="form-field">
 				<label for="customerName">Ваше имя</label>
 				<input
@@ -108,7 +147,13 @@
 				{/if}
 			</div>
 
-			<button type="submit" class="btn">Отправить отзыв</button>
+			{#if form?.errors?.captcha}
+				<p class="field-error">{form.errors.captcha}</p>
+			{/if}
+
+			<button type="submit" class="btn" disabled={submitting}>
+				{submitting ? 'Отправка...' : 'Отправить отзыв'}
+			</button>
 		</form>
 	</section>
 

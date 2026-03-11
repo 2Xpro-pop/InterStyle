@@ -1,5 +1,6 @@
 using InterStyle.ApiShared;
 using InterStyle.Reviews.Api;
+using InterStyle.Reviews.Api.Services;
 using InterStyle.Reviews.Application.Commands;
 using InterStyle.Reviews.Application.Queries;
 using InterStyle.Reviews.Domain;
@@ -25,6 +26,8 @@ builder.AddDefaultOpenApi(withApiVersioning);
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 builder.Services.AddScoped<IReviewQueries, ReviewQueries>();
+
+builder.Services.AddHttpClient<ICaptchaValidator, GoogleCaptchaValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

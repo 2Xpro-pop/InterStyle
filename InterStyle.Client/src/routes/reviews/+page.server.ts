@@ -1,5 +1,6 @@
 import { resolveReviewsService } from '$lib/ioc/reviewsServiceResolver';
 import type { IReviewsService } from '$lib/services/IReviewsService';
+import { env } from '$env/dynamic/public';
 import { fail } from '@sveltejs/kit';
 
 export const prerender = false;
@@ -29,7 +30,8 @@ export async function load({ fetch, url }) {
 	const reviewsPage = await getReviewsPageData(reviewsService, fetch, page, pageSize);
 
 	return {
-		reviewsPage
+		reviewsPage,
+		recaptchaSiteKey: env.PUBLIC_RECAPTCHA_SITE_KEY ?? ''
 	};
 }
 
@@ -39,6 +41,7 @@ export const actions = {
 		const customerName = (formData.get('customerName') as string ?? '').trim();
 		const ratingStr = formData.get('rating') as string ?? '';
 		const comment = (formData.get('comment') as string ?? '').trim();
+		const captchaToken = (formData.get('captchaToken') as string ?? '').trim();
 
 		const errors: Record<string, string> = {};
 
@@ -59,13 +62,17 @@ export const actions = {
 			errors.comment = 'Комментарий не должен превышать 2000 символов.';
 		}
 
+		if (!captchaToken) {
+			errors.captcha = 'Подтвердите, что вы не робот.';
+		}
+
 		if (Object.keys(errors).length > 0) {
 			return fail(400, { errors, customerName, rating: ratingStr, comment });
 		}
 
 		try {
 			const reviewsService = resolveReviewsService();
-			await reviewsService.submitReview(fetch, { customerName, rating, comment });
+			await reviewsService.submitReview(fetch, { customerName, rating, comment, captchaToken });
 			return { success: true };
 		} catch {
 			return fail(500, {

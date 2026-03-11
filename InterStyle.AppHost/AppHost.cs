@@ -43,6 +43,8 @@ var jwtPfx = builder.AddParameter("jwt-signing-pfx", secret: true);
 var jwtPfxPassword = builder.AddParameter("jwt-signing-password", secret: true);
 var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
+var captchaGoogleToken = builder.AddParameter("captcha-google-token", secret: true);
+
 var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithReference(leadsDb).WaitFor(leadsDb)
@@ -58,6 +60,7 @@ var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("intersty
     .WithReference(curtainsDb).WaitFor(curtainsDb)
     .WithReference(imageApi)
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
+    .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
     .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)

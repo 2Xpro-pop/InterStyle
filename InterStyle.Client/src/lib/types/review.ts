@@ -22,4 +22,5 @@ export interface SubmitReviewRequest {
 	customerName: string;
 	rating: number;
 	comment: string;
+	captchaToken: string;
 }

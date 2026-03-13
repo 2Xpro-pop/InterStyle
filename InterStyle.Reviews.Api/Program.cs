@@ -6,6 +6,7 @@ using InterStyle.Reviews.Application.Queries;
 using InterStyle.Reviews.Domain;
 using InterStyle.Reviews.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,16 @@ builder.AddDefaultOpenApi(withApiVersioning);
 
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
-builder.Services.AddScoped<IReviewQueries, ReviewQueries>();
+builder.Services.AddScoped<ReviewQueries>();
+builder.Services.AddScoped<IReviewQueries>(sp =>
+    new CachedReviewQueries(
+        sp.GetRequiredService<ReviewQueries>(),
+        sp.GetRequiredService<IDistributedCache>()));
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("cache");
+});
 
 builder.Services.AddHttpClient<ICaptchaValidator, GoogleCaptchaValidator>();
 

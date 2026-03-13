@@ -6,6 +6,7 @@ using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
 using InterStyle.Curtains.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +27,16 @@ builder.Services.AddApiVersioning();
 
 builder.Services.AddScoped<ICurtainRepository, CurtainRepository>();
 
-builder.Services.AddScoped<ICurtainQueries, CurtainsQueries>();
+builder.Services.AddScoped<CurtainsQueries>();
+builder.Services.AddScoped<ICurtainQueries>(sp =>
+    new CachedCurtainsQueries(
+        sp.GetRequiredService<CurtainsQueries>(),
+        sp.GetRequiredService<IDistributedCache>()));
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("cache");
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -49,7 +49,7 @@ public static class CurtainsApi
             var previewUrl = $"/api/images/{previewId}";
 
             var id = await mediator.Send(
-                new CreateCurtainCommand(model.Name, model.Description, pictureUrl, previewUrl),
+                new CreateCurtainCommand(model.Locale, model.Name, model.Description, pictureUrl, previewUrl),
                 ct);
 
             return Results.Created($"/api/curtains/{id.Value}", new { id = id.Value });
@@ -57,30 +57,19 @@ public static class CurtainsApi
           .RequireAuthorization(InterStylePolicies.AdminOnly);
 
 
-        api.MapGet("", async (ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("", async ([FromQuery] string locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetAllAsync(ct);
+            var result = await queries.GetAllAsync(locale, ct);
             return Results.Ok(result);
         }).AllowAnonymous();
 
-        api.MapGet("{id:guid}", async (Guid id, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetByIdAsync(id, ct);
+            var result = await queries.GetByIdAsync(id, locale, ct);
             return result is not null ? Results.Ok(result) : Results.NotFound();
         }).AllowAnonymous();
 
-        api.MapPut("{id:guid}/name", async (Guid id, ChangeCurtainNameCommand command, IMediator mediator, CancellationToken ct) =>
-        {
-            if (id != command.CurtainId)
-            {
-                return Results.BadRequest(new { error = "Route id does not match command id." });
-            }
-
-            await mediator.Send(command, ct);
-            return Results.NoContent();
-        }).RequireAuthorization(InterStylePolicies.AdminOnly);
-
-        api.MapPut("{id:guid}/description", async (Guid id, ChangeCurtainDescriptionCommand command, IMediator mediator, CancellationToken ct) =>
+        api.MapPut("{id:guid}/translations", async (Guid id, UpsertCurtainTranslationCommand command, IMediator mediator, CancellationToken ct) =>
         {
             if (id != command.CurtainId)
             {

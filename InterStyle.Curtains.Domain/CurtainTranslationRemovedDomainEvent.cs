@@ -3,10 +3,9 @@ using InterStyle.Shared;
 namespace InterStyle.Curtains.Domain;
 
 /// <summary>
-/// Raised when curtain name is changed.
+/// Raised when a translation is removed from a curtain.
 /// </summary>
-public sealed record CurtainNameChangedDomainEvent(
+public sealed record CurtainTranslationRemovedDomainEvent(
     CurtainId CurtainId,
-    CurtainName OldName,
-    CurtainName NewName,
+    string Locale,
     DateTimeOffset OccurredAtUtc) : IDomainEvent;

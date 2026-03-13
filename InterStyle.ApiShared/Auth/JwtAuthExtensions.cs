@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +18,12 @@ public static class JwtAuthExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+
+        if(EF.IsDesignTime)
+        {
+            return services;
+        }
+
         var jwtSection = configuration.GetSection("Jwt");
         var jwt = jwtSection.Get<JwtOptions>()
                   ?? throw new InvalidOperationException("Jwt section is not configured");

@@ -14,42 +14,48 @@ public sealed class CurtainsQueries(IConfiguration configuration) : ICurtainQuer
         ?? throw new InvalidOperationException("Connection string 'curtainsdb' not found.");
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(string locale, CancellationToken cancellationToken = default)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
         const string sql = """
-            SELECT
-                id AS "Id",
-                name AS "Name",
-                description AS "Description",
-                picture_url AS "PictureUrl",
-                preview_url AS "PreviewUrl"
-            FROM curtains.curtains
-            ORDER BY name
+            SELECT DISTINCT ON (c.id)
+                c.id        AS "Id",
+                t.name      AS "Name",
+                t.description AS "Description",
+                t.locale    AS "Locale",
+                c.picture_url AS "PictureUrl",
+                c.preview_url AS "PreviewUrl"
+            FROM curtains.curtains c
+            INNER JOIN curtains.curtain_translations t ON t.curtain_id = c.id
+            ORDER BY c.id, (t.locale = @locale) DESC, t.locale
             """;
 
-        var items = await connection.QueryAsync<CurtainDto>(sql);
+        var items = await connection.QueryAsync<CurtainDto>(sql, new { locale });
 
         return [.. items];
     }
 
     /// <inheritdoc />
-    public async Task<CurtainDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<CurtainDto?> GetByIdAsync(Guid id, string locale, CancellationToken cancellationToken = default)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
         const string sql = """
             SELECT
-                id AS "Id",
-                name AS "Name",
-                description AS "Description",
-                picture_url AS "PictureUrl",
-                preview_url AS "PreviewUrl"
-            FROM curtains.curtains
-            WHERE id = @id
+                c.id        AS "Id",
+                t.name      AS "Name",
+                t.description AS "Description",
+                t.locale    AS "Locale",
+                c.picture_url AS "PictureUrl",
+                c.preview_url AS "PreviewUrl"
+            FROM curtains.curtains c
+            INNER JOIN curtains.curtain_translations t ON t.curtain_id = c.id
+            WHERE c.id = @id
+            ORDER BY (t.locale = @locale) DESC, t.locale
+            LIMIT 1
             """;
 
-        return await connection.QuerySingleOrDefaultAsync<CurtainDto>(sql, new { id });
+        return await connection.QuerySingleOrDefaultAsync<CurtainDto>(sql, new { id, locale });
     }
 }

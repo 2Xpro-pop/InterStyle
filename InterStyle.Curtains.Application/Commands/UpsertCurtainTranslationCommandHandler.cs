@@ -4,15 +4,15 @@ using MediatR;
 namespace InterStyle.Curtains.Application.Commands;
 
 /// <summary>
-/// Handler for <see cref="ChangeCurtainNameCommand"/>.
+/// Handler for <see cref="UpsertCurtainTranslationCommand"/>.
 /// </summary>
-public sealed class ChangeCurtainNameCommandHandler(ICurtainRepository curtainRepository)
-    : IRequestHandler<ChangeCurtainNameCommand>
+public sealed class UpsertCurtainTranslationCommandHandler(ICurtainRepository curtainRepository)
+    : IRequestHandler<UpsertCurtainTranslationCommand>
 {
     private readonly ICurtainRepository _curtainRepository = curtainRepository;
 
     /// <inheritdoc />
-    public async Task Handle(ChangeCurtainNameCommand request, CancellationToken cancellationToken)
+    public async Task Handle(UpsertCurtainTranslationCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -20,8 +20,11 @@ public sealed class ChangeCurtainNameCommandHandler(ICurtainRepository curtainRe
         var curtain = await _curtainRepository.GetByIdAsync(curtainId, cancellationToken)
             ?? throw new InvalidOperationException($"Curtain with ID {request.CurtainId} not found.");
 
-        var newName = CurtainName.Create(request.NewName);
-        curtain.ChangeName(newName);
+        var locale = Locale.Create(request.Locale);
+        var name = CurtainName.Create(request.Name);
+        var description = Description.Create(request.Description);
+
+        curtain.UpsertTranslation(locale, name, description);
 
         _curtainRepository.Update(curtain);
         await _curtainRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);

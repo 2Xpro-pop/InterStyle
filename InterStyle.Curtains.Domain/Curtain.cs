@@ -2,32 +2,23 @@
 
 namespace InterStyle.Curtains.Domain;
 
-public sealed class Curtain: AggregateRoot<CurtainId>
+public sealed class Curtain : AggregateRoot<CurtainId>
 {
+    private readonly List<CurtainTranslation> _translations = [];
+
     // for EF
     private Curtain()
     {
-
     }
 
-    private Curtain(CurtainId id, CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
+    private Curtain(CurtainId id, PictureUrl pictureUrl, PictureUrl previewUrl)
         : base(id)
     {
-        Name = name;
-        Description = description;
         PictureUrl = pictureUrl;
         PreviewUrl = previewUrl;
     }
 
-    public CurtainName Name
-    {
-        get; private set;
-    }
-
-    public Description Description
-    {
-        get; private set;
-    }
+    public IReadOnlyCollection<CurtainTranslation> Translations => _translations;
 
     public PictureUrl PictureUrl
     {
@@ -39,39 +30,53 @@ public sealed class Curtain: AggregateRoot<CurtainId>
         get; private set;
     }
 
-    public static Curtain Create(CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
+    public static Curtain Create(Locale locale, CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
     {
-        var curtain = new Curtain(CurtainId.New(), name, description, pictureUrl, previewUrl);
+        var curtain = new Curtain(CurtainId.New(), pictureUrl, previewUrl);
 
-        curtain.AddDomainEvent(new CurtainCreatedDomainEvent(curtain.Id, DateTime.UtcNow));
+        curtain._translations.Add(CurtainTranslation.Create(locale, name, description));
+
+        curtain.AddDomainEvent(new CurtainCreatedDomainEvent(curtain.Id, DateTimeOffset.UtcNow));
 
         return curtain;
     }
 
-    public void ChangeName(CurtainName newName)
+    public void UpsertTranslation(Locale locale, CurtainName name, Description description)
     {
-        if (Name == newName)
+        var existing = _translations.SingleOrDefault(t => t.Locale == locale);
+
+        if (existing is null)
+        {
+            _translations.Add(CurtainTranslation.Create(locale, name, description));
+            AddDomainEvent(new CurtainTranslationAddedDomainEvent(Id, locale.Value, DateTimeOffset.UtcNow));
+            return;
+        }
+
+        if (existing.Name == name && existing.Description == description)
         {
             return;
         }
 
-        var oldName = Name;
-        Name = newName;
-
-        AddDomainEvent(new CurtainNameChangedDomainEvent(Id, oldName, newName, DateTimeOffset.UtcNow));
+        existing.Update(name, description);
+        AddDomainEvent(new CurtainTranslationUpdatedDomainEvent(Id, locale.Value, DateTimeOffset.UtcNow));
     }
 
-    public void ChangeDescription(Description newDescription)
+    public void RemoveTranslation(Locale locale)
     {
-        if (Description == newDescription)
+        var existing = _translations.SingleOrDefault(t => t.Locale == locale);
+
+        if (existing is null)
         {
             return;
         }
 
-        var oldDescription = Description;
-        Description = newDescription;
+        if (_translations.Count == 1)
+        {
+            throw new InvalidOperationException("Cannot remove the last translation.");
+        }
 
-        AddDomainEvent(new CurtainDescriptionChangedDomainEvent(Id, oldDescription, newDescription, DateTimeOffset.UtcNow));
+        _translations.Remove(existing);
+        AddDomainEvent(new CurtainTranslationRemovedDomainEvent(Id, locale.Value, DateTimeOffset.UtcNow));
     }
 
     public void ChangePictureUrl(PictureUrl newPictureUrl)
@@ -100,8 +105,10 @@ public sealed class Curtain: AggregateRoot<CurtainId>
         AddDomainEvent(new CurtainPreviewChangedDomainEvent(Id, oldPreviewUrl, newPreviewUrl, DateTimeOffset.UtcNow));
     }
 
-    internal static Curtain Rehydrate(CurtainId id, CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
+    internal static Curtain Rehydrate(CurtainId id, PictureUrl pictureUrl, PictureUrl previewUrl, IEnumerable<CurtainTranslation> translations)
     {
-        return new Curtain(id, name, description, pictureUrl, previewUrl);
+        var curtain = new Curtain(id, pictureUrl, previewUrl);
+        curtain._translations.AddRange(translations);
+        return curtain;
     }
 }

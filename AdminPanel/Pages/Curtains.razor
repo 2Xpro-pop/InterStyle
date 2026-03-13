@@ -97,12 +97,17 @@
 
                     <div class="form-group">
                         <label>Locale</label>
-                        <select class="form-control" @bind="editor.Locale" @bind:after="() => LoadTranslationAsync(curtain.Id)" disabled="@isBusy">
+                        <div class="locale-toggle">
                             @foreach (var locale in _availableLocales)
                             {
-                                <option value="@locale">@locale</option>
+                                var isActive = string.Equals(editor.Locale, locale, StringComparison.OrdinalIgnoreCase);
+                                <button class="locale-option @(isActive ? "active" : "")"
+                                        disabled="@isBusy"
+                                        @onclick="() => SwitchLocaleAsync(curtain.Id, locale)">
+                                    @locale
+                                </button>
                             }
-                        </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -266,6 +271,18 @@
         {
             _isCreating = false;
         }
+    }
+
+    private async Task SwitchLocaleAsync(Guid curtainId, string locale)
+    {
+        if (!_editors.TryGetValue(curtainId, out var editor) ||
+            string.Equals(editor.Locale, locale, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        editor.Locale = locale;
+        await LoadTranslationAsync(curtainId);
     }
 
     private async Task LoadTranslationAsync(Guid curtainId)

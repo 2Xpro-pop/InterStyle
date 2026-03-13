@@ -18,7 +18,7 @@ public sealed class CurtainsQueries(IConfiguration configuration) : ICurtainQuer
         ?? throw new InvalidOperationException("Connection string 'curtainsdb' not found.");
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(string locale, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(Locale locale, CancellationToken cancellationToken = default)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -38,13 +38,13 @@ public sealed class CurtainsQueries(IConfiguration configuration) : ICurtainQuer
                      t.locale
             """;
 
-        var items = await connection.QueryAsync<CurtainDto>(sql, new { locale, defaultLocale = DefaultLocale });
+        var items = await connection.QueryAsync<CurtainDto>(sql, new { locale = locale.Value, defaultLocale = DefaultLocale });
 
         return [.. items];
     }
 
     /// <inheritdoc />
-    public async Task<CurtainDto?> GetByIdAsync(Guid id, string locale, CancellationToken cancellationToken = default)
+    public async Task<CurtainDto?> GetByIdAsync(Guid id, Locale locale, CancellationToken cancellationToken = default)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -65,6 +65,6 @@ public sealed class CurtainsQueries(IConfiguration configuration) : ICurtainQuer
             LIMIT 1
             """;
 
-        return await connection.QuerySingleOrDefaultAsync<CurtainDto>(sql, new { id, locale, defaultLocale = DefaultLocale });
+        return await connection.QuerySingleOrDefaultAsync<CurtainDto>(sql, new { id, locale = locale.Value, defaultLocale = DefaultLocale });
     }
 }

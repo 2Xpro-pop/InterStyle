@@ -59,14 +59,14 @@ public static class CurtainsApi
 
         api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var effectiveLocale = locale ?? Domain.Locale.Default.Value;
+            var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
             var result = await queries.GetAllAsync(effectiveLocale, ct);
             return Results.Ok(result);
         }).AllowAnonymous();
 
         api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var effectiveLocale = locale ?? Domain.Locale.Default.Value;
+            var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
             var result = await queries.GetByIdAsync(id, effectiveLocale, ct);
             return result is not null ? Results.Ok(result) : Results.NotFound();
         }).AllowAnonymous();

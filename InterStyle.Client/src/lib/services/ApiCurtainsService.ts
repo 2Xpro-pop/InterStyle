@@ -28,11 +28,11 @@ function mapApiCurtain(item: CurtainApiDto, index: number): Curtain {
 export class ApiCurtainsService implements ICurtainsService {
 	constructor(private readonly baseUrl: string) {}
 
-	async getAllCurtains(fetchFn: typeof fetch, culture?: string): Promise<Curtain[]> {
+	async getAllCurtains(fetchFn: typeof fetch, locale?: string): Promise<Curtain[]> {
 		const url = new URL(`${this.baseUrl}/api/curtains`);
 		url.searchParams.set('api-version', '1.0');
-		if (culture) {
-			url.searchParams.set('culture', culture);
+		if (locale) {
+			url.searchParams.set('locale', locale);
 		}
 		console.log(`[CurtainsAPI] GET ${url}`);
 		const response = await fetchFn(url.toString());

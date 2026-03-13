@@ -15,7 +15,6 @@ public interface ICurtainsApi
     Task<ApiResponse<CreateCurtainResponse>> CreateAsync(
         [AliasAs("Picture")] StreamPart picture,
         [AliasAs("Preview")] StreamPart preview,
-        [AliasAs("Locale")] string locale,
         [AliasAs("Name")] string name,
         [AliasAs("Description")] string description);
 

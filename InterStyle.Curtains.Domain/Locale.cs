@@ -11,6 +11,11 @@ public readonly record struct Locale
 {
     private static readonly Regex BcpPattern = new(@"^[a-z]{2,3}(-[a-z]{2,8})*$", RegexOptions.Compiled);
 
+    /// <summary>
+    /// The default catalog locale used as fallback.
+    /// </summary>
+    public static readonly Locale Default = new("ru-ru");
+
     public string Value { get; }
 
     private Locale(string value)

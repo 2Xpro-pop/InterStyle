@@ -8,7 +8,7 @@ public interface ICurtainQueries
 {
     /// <summary>
     /// Gets all curtains with translations for the specified locale.
-    /// Falls back to any available translation when the requested locale is not found.
+    /// Fallback order: requested locale → default locale → any available translation.
     /// </summary>
     /// <param name="locale">The preferred locale (BCP 47 tag).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -17,7 +17,7 @@ public interface ICurtainQueries
 
     /// <summary>
     /// Gets a curtain by its identifier with translations for the specified locale.
-    /// Falls back to any available translation when the requested locale is not found.
+    /// Fallback order: requested locale → default locale → any available translation.
     /// </summary>
     /// <param name="id">The curtain identifier.</param>
     /// <param name="locale">The preferred locale (BCP 47 tag).</param>

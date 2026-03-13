@@ -16,14 +16,12 @@ public sealed class CreateCurtainCommandHandler(ICurtainRepository curtainReposi
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var locale = Locale.Create(request.Locale);
         var name = CurtainName.Create(request.Name);
         var description = Description.Create(request.Description);
         var pictureUrl = PictureUrl.Create(request.PictureUrl);
         var previewUrl = PictureUrl.Create(request.PreviewUrl);
 
         var curtain = Curtain.Create(
-            locale: locale,
             name: name,
             description: description,
             pictureUrl: pictureUrl,

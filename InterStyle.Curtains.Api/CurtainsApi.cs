@@ -49,7 +49,7 @@ public static class CurtainsApi
             var previewUrl = $"/api/images/{previewId}";
 
             var id = await mediator.Send(
-                new CreateCurtainCommand(model.Locale, model.Name, model.Description, pictureUrl, previewUrl),
+                new CreateCurtainCommand(model.Name, model.Description, pictureUrl, previewUrl),
                 ct);
 
             return Results.Created($"/api/curtains/{id.Value}", new { id = id.Value });
@@ -57,15 +57,17 @@ public static class CurtainsApi
           .RequireAuthorization(InterStylePolicies.AdminOnly);
 
 
-        api.MapGet("", async ([FromQuery] string locale, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetAllAsync(locale, ct);
+            var effectiveLocale = locale ?? Domain.Locale.Default.Value;
+            var result = await queries.GetAllAsync(effectiveLocale, ct);
             return Results.Ok(result);
         }).AllowAnonymous();
 
-        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string locale, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetByIdAsync(id, locale, ct);
+            var effectiveLocale = locale ?? Domain.Locale.Default.Value;
+            var result = await queries.GetByIdAsync(id, effectiveLocale, ct);
             return result is not null ? Results.Ok(result) : Results.NotFound();
         }).AllowAnonymous();
 

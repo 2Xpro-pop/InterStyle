@@ -30,11 +30,11 @@ public sealed class Curtain : AggregateRoot<CurtainId>
         get; private set;
     }
 
-    public static Curtain Create(Locale locale, CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
+    public static Curtain Create(CurtainName name, Description description, PictureUrl pictureUrl, PictureUrl previewUrl)
     {
         var curtain = new Curtain(CurtainId.New(), pictureUrl, previewUrl);
 
-        curtain._translations.Add(CurtainTranslation.Create(locale, name, description));
+        curtain._translations.Add(CurtainTranslation.Create(Locale.Default, name, description));
 
         curtain.AddDomainEvent(new CurtainCreatedDomainEvent(curtain.Id, DateTimeOffset.UtcNow));
 

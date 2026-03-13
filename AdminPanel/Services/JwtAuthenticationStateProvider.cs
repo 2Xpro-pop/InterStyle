@@ -66,9 +66,9 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
         }
         
         var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
-        var state = new JwtAuthenticationState(jwtToken);
+        _state = new JwtAuthenticationState(jwtToken);
 
-        NotifyAuthenticationStateChanged(Task.FromResult<AuthenticationState>(state));
+        NotifyAuthenticationStateChanged(Task.FromResult<AuthenticationState>(_state));
     }
 
     public async Task ClearTokenAsync()
@@ -79,6 +79,7 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
 
     private async Task RemoveTokenAsync()
     {
+        _state = null;
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenStorageKey);
     }
 

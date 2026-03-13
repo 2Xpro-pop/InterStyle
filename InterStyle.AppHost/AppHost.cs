@@ -45,14 +45,17 @@ var jwtActiveKid = builder.AddParameter("jwt-active-kid", secret: false);
 
 var captchaGoogleToken = builder.AddParameter("captcha-google-token", secret: true);
 var captchaGoogleSiteKey = builder.AddParameter("captcha-google-site-key", "6LdKtoYsAAAAANvmYl4ew2_nQdQzKsb1v3u6eKCk", secret: false);
+var mediatRLicenseKey = builder.AddParameter("mediatr-license-key", secret: true);
 
 var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-leads-api")
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithReference(leadsDb).WaitFor(leadsDb)
+    .WithMediatrLicense(mediatRLicenseKey)
     .WithJwtAuthority(IdentityApiUrl);
 
 var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
     .WithReference(reviewsDb).WaitFor(reviewsDb)
+    .WithMediatrLicense(mediatRLicenseKey)
     .WithJwtAuthority(IdentityApiUrl);
 
 var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
@@ -62,6 +65,7 @@ var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("intersty
     .WithReference(imageApi)
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
+    .WithMediatrLicense(mediatRLicenseKey)
     .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)

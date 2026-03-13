@@ -5,14 +5,13 @@ using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
 using InterStyle.Curtains.Infrastructure.Persistence;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateCurtainCommand>());
+builder.Services.AddInterStyleMediatR<CreateCurtainCommand>(builder.Configuration);
 
 builder.Services.AddDefaultDbContext<CurtainsDbContext>(options =>
 {

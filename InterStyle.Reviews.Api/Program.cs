@@ -5,14 +5,13 @@ using InterStyle.Reviews.Application.Commands;
 using InterStyle.Reviews.Application.Queries;
 using InterStyle.Reviews.Domain;
 using InterStyle.Reviews.Infrastructure.Persistence;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApproveReviewCommand>());
+builder.Services.AddInterStyleMediatR<ApproveReviewCommand>(builder.Configuration);
 
 builder.Services.AddDefaultDbContext<ReviewsDbContext>(options =>
 {

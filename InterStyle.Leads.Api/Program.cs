@@ -5,7 +5,6 @@ using InterStyle.Leads.Application.Commands;
 using InterStyle.Leads.Application.Queries;
 using InterStyle.Leads.Domain;
 using InterStyle.Leads.Infrastructure.Persistence;
-using MediatR;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing.Constraints;
@@ -16,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateLeadCommand>());
+builder.Services.AddInterStyleMediatR<CreateLeadCommand>(builder.Configuration);
 
 builder.Services.AddDefaultDbContext<LeadsDbContext>(options =>
 {

@@ -52,6 +52,8 @@ jobs:
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}
 
+          Parameters__mediatr-license-key: ${{ secrets.MEDIATR_LICENSE_KEY }}
+
           Parameters__jwt-signing-pfx: ${{ secrets.JWT_SIGNING_PFX }}
           Parameters__jwt-signing-password: ${{ secrets.JWT_SIGNING_PASSWORD }}
           Parameters__jwt-active-kid: main

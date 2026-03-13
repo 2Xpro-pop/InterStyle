@@ -76,16 +76,26 @@
                     </div>
 
                     <div class="form-group">
+                        <label>Locale</label>
+                        <select class="form-control" @bind="editor.Locale" @bind:after="() => LoadTranslationAsync(curtain.Id)" disabled="@isBusy">
+                            @foreach (var locale in _availableLocales)
+                            {
+                                <option value="@locale">@locale</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label>Name</label>
-                        <input class="form-control" @bind="editor.Name" />
+                        <input class="form-control" @bind="editor.Name" disabled="@isBusy" />
                     </div>
 
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea class="form-control" rows="3" @bind="editor.Description"></textarea>
+                        <textarea class="form-control" rows="3" @bind="editor.Description" disabled="@isBusy"></textarea>
                     </div>
 
-                    <button class="secondary-button" @onclick="() => SaveDetailsAsync(curtain.Id)" disabled="@isBusy">Save details</button>
+                    <button class="secondary-button" @onclick="() => SaveTranslationAsync(curtain.Id)" disabled="@isBusy">Save translation</button>
 
                     <div class="upload-actions">
                         <div class="form-group">
@@ -107,6 +117,8 @@
 </div>
 
 @code {
+    private static readonly string[] _availableLocales = ["ru-ru", "kg-kg"];
+
     private readonly List<CurtainDto> _curtains = [];
     private readonly Dictionary<Guid, CurtainEditor> _editors = [];
     private readonly HashSet<Guid> _busyItems = [];
@@ -131,7 +143,7 @@
 
         try
         {
-            var items = await CurtainsApi.GetAllAsync();
+            var items = await CurtainsApi.GetAllAsync(_availableLocales[0]);
             _curtains.Clear();
             _curtains.AddRange(items);
 
@@ -140,6 +152,7 @@
             {
                 _editors[item.Id] = new CurtainEditor
                 {
+                    Locale = item.Locale,
                     Name = item.Name,
                     Description = item.Description
                 };
@@ -205,7 +218,42 @@
         }
     }
 
-    private async Task SaveDetailsAsync(Guid id)
+    private async Task LoadTranslationAsync(Guid curtainId)
+    {
+        if (!_editors.TryGetValue(curtainId, out var editor))
+        {
+            return;
+        }
+
+        _busyItems.Add(curtainId);
+
+        try
+        {
+            var dto = await CurtainsApi.GetByIdAsync(curtainId, editor.Locale);
+
+            if (dto is not null && string.Equals(dto.Locale, editor.Locale, StringComparison.OrdinalIgnoreCase))
+            {
+                editor.Name = dto.Name;
+                editor.Description = dto.Description;
+            }
+            else
+            {
+                editor.Name = string.Empty;
+                editor.Description = string.Empty;
+            }
+        }
+        catch (Exception exception)
+        {
+            _errorMessage = "Failed to load translation.";
+            Logger.LogError(exception, "Failed to load translation for {CurtainId} / {Locale}", curtainId, editor.Locale);
+        }
+        finally
+        {
+            _busyItems.Remove(curtainId);
+        }
+    }
+
+    private async Task SaveTranslationAsync(Guid id)
     {
         if (!_editors.TryGetValue(id, out var editor))
         {
@@ -217,16 +265,15 @@
 
         try
         {
-            await CurtainsApi.UpdateNameAsync(id, new ChangeCurtainNameRequest(id, editor.Name));
-            await CurtainsApi.UpdateDescriptionAsync(id, new ChangeCurtainDescriptionRequest(id, editor.Description));
+            var request = new UpsertCurtainTranslationRequest(id, editor.Locale, editor.Name, editor.Description);
+            await CurtainsApi.UpsertTranslationAsync(id, request);
 
-            _message = "Details updated.";
-            await LoadCurtainsAsync();
+            _message = "Translation saved.";
         }
         catch (Exception exception)
         {
-            _errorMessage = "Failed to update details.";
-            Logger.LogError(exception, "Failed to update curtain details for {CurtainId}", id);
+            _errorMessage = "Failed to save translation.";
+            Logger.LogError(exception, "Failed to save curtain translation for {CurtainId}", id);
         }
         finally
         {
@@ -328,6 +375,7 @@
 
     private sealed class CurtainEditor
     {
+        public string Locale { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public IBrowserFile? Picture { get; set; }

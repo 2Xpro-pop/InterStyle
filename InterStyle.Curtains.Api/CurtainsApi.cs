@@ -57,30 +57,21 @@ public static class CurtainsApi
           .RequireAuthorization(InterStylePolicies.AdminOnly);
 
 
-        api.MapGet("", async (ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetAllAsync(ct);
+            var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
+            var result = await queries.GetAllAsync(effectiveLocale, ct);
             return Results.Ok(result);
         }).AllowAnonymous();
 
-        api.MapGet("{id:guid}", async (Guid id, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
         {
-            var result = await queries.GetByIdAsync(id, ct);
+            var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
+            var result = await queries.GetByIdAsync(id, effectiveLocale, ct);
             return result is not null ? Results.Ok(result) : Results.NotFound();
         }).AllowAnonymous();
 
-        api.MapPut("{id:guid}/name", async (Guid id, ChangeCurtainNameCommand command, IMediator mediator, CancellationToken ct) =>
-        {
-            if (id != command.CurtainId)
-            {
-                return Results.BadRequest(new { error = "Route id does not match command id." });
-            }
-
-            await mediator.Send(command, ct);
-            return Results.NoContent();
-        }).RequireAuthorization(InterStylePolicies.AdminOnly);
-
-        api.MapPut("{id:guid}/description", async (Guid id, ChangeCurtainDescriptionCommand command, IMediator mediator, CancellationToken ct) =>
+        api.MapPut("{id:guid}/translations", async (Guid id, UpsertCurtainTranslationCommand command, IMediator mediator, CancellationToken ct) =>
         {
             if (id != command.CurtainId)
             {

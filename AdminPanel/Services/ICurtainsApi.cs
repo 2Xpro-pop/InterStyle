@@ -5,7 +5,10 @@ namespace AdminPanel.Services;
 public interface ICurtainsApi
 {
     [Get("/api/curtains")]
-    Task<IReadOnlyList<CurtainDto>> GetAllAsync();
+    Task<IReadOnlyList<CurtainDto>> GetAllAsync([Query] string locale);
+
+    [Get("/api/curtains/{id}")]
+    Task<CurtainDto?> GetByIdAsync(Guid id, [Query] string locale);
 
     [Multipart]
     [Post("/api/curtains")]
@@ -15,11 +18,8 @@ public interface ICurtainsApi
         [AliasAs("Name")] string name,
         [AliasAs("Description")] string description);
 
-    [Put("/api/curtains/{id}/name")]
-    Task UpdateNameAsync(Guid id, [Body] ChangeCurtainNameRequest request);
-
-    [Put("/api/curtains/{id}/description")]
-    Task UpdateDescriptionAsync(Guid id, [Body] ChangeCurtainDescriptionRequest request);
+    [Put("/api/curtains/{id}/translations")]
+    Task UpsertTranslationAsync(Guid id, [Body] UpsertCurtainTranslationRequest request);
 
     [Multipart]
     [Put("/api/curtains/{id}/picture")]
@@ -34,11 +34,14 @@ public sealed record CurtainDto(
     Guid Id,
     string Name,
     string Description,
+    string Locale,
     string PictureUrl,
     string PreviewUrl);
 
-public sealed record ChangeCurtainNameRequest(Guid CurtainId, string NewName);
-
-public sealed record ChangeCurtainDescriptionRequest(Guid CurtainId, string NewDescription);
+public sealed record UpsertCurtainTranslationRequest(
+    Guid CurtainId,
+    string Locale,
+    string Name,
+    string Description);
 
 public sealed record CreateCurtainResponse(Guid Id);

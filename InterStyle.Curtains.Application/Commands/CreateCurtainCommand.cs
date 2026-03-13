@@ -4,7 +4,7 @@ using MediatR;
 namespace InterStyle.Curtains.Application.Commands;
 
 /// <summary>
-/// Command to create a new curtain.
+/// Command to create a new curtain with an initial translation in the default locale.
 /// </summary>
 /// <param name="Name">The curtain name.</param>
 /// <param name="Description">The curtain description.</param>

@@ -16,14 +16,18 @@ public sealed class CurtainRepository(CurtainsDbContext dbContext): ICurtainRepo
 
     public async Task<ImmutableArray<Curtain>> GetCurtainsAsync(CancellationToken cancellationToken = default)
     {
-        var array = await _dbContext.Set<Curtain>().ToArrayAsync(cancellationToken);
+        var array = await _dbContext.Set<Curtain>()
+            .Include(x => x.Translations)
+            .ToArrayAsync(cancellationToken);
 
         return array.ToImmutableArrayUnsafe();
     }
 
     public async Task<Curtain?> GetByIdAsync(CurtainId id, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<Curtain>().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        return await _dbContext.Set<Curtain>()
+            .Include(x => x.Translations)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
     public async Task<Curtain?> AddAsync(Curtain curtain, CancellationToken cancellationToken = default)

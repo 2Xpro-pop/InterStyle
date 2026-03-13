@@ -39,12 +39,32 @@
 
             <div class="form-group">
                 <label>Picture</label>
-                <InputFile OnChange="OnCreatePictureSelected" accept="image/*" />
+                <div class="upload-zone">
+                    @if (_newPictureDataUrl is not null)
+                    {
+                        <img class="upload-thumb" src="@_newPictureDataUrl" alt="Picture preview" />
+                    }
+                    else
+                    {
+                        <span class="upload-placeholder">Select image...</span>
+                    }
+                    <InputFile OnChange="OnCreatePictureSelected" accept="image/*" />
+                </div>
             </div>
 
             <div class="form-group">
                 <label>Preview</label>
-                <InputFile OnChange="OnCreatePreviewSelected" accept="image/*" />
+                <div class="upload-zone">
+                    @if (_newPreviewDataUrl is not null)
+                    {
+                        <img class="upload-thumb" src="@_newPreviewDataUrl" alt="Preview preview" />
+                    }
+                    else
+                    {
+                        <span class="upload-placeholder">Select image...</span>
+                    }
+                    <InputFile OnChange="OnCreatePreviewSelected" accept="image/*" />
+                </div>
             </div>
         </div>
 
@@ -77,12 +97,17 @@
 
                     <div class="form-group">
                         <label>Locale</label>
-                        <select class="form-control" @bind="editor.Locale" @bind:after="() => LoadTranslationAsync(curtain.Id)" disabled="@isBusy">
+                        <div class="locale-toggle">
                             @foreach (var locale in _availableLocales)
                             {
-                                <option value="@locale">@locale</option>
+                                var isActive = string.Equals(editor.Locale, locale, StringComparison.OrdinalIgnoreCase);
+                                <button class="locale-option @(isActive ? "active" : "")"
+                                        disabled="@isBusy"
+                                        @onclick="() => SwitchLocaleAsync(curtain.Id, locale)">
+                                    @locale
+                                </button>
                             }
-                        </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -100,13 +125,33 @@
                     <div class="upload-actions">
                         <div class="form-group">
                             <label>Change picture</label>
-                            <InputFile OnChange="e => OnPictureSelected(curtain.Id, e)" accept="image/*" />
+                            <div class="upload-zone upload-zone-sm">
+                                @if (editor.PictureDataUrl is not null)
+                                {
+                                    <img class="upload-thumb" src="@editor.PictureDataUrl" alt="New picture" />
+                                }
+                                else
+                                {
+                                    <span class="upload-placeholder">Select image...</span>
+                                }
+                                <InputFile OnChange="e => OnPictureSelected(curtain.Id, e)" accept="image/*" />
+                            </div>
                             <button class="secondary-button" @onclick="() => SavePictureAsync(curtain.Id)" disabled="@isBusy">Update picture</button>
                         </div>
 
                         <div class="form-group">
                             <label>Change preview</label>
-                            <InputFile OnChange="e => OnPreviewSelected(curtain.Id, e)" accept="image/*" />
+                            <div class="upload-zone upload-zone-sm">
+                                @if (editor.PreviewDataUrl is not null)
+                                {
+                                    <img class="upload-thumb" src="@editor.PreviewDataUrl" alt="New preview" />
+                                }
+                                else
+                                {
+                                    <span class="upload-placeholder">Select image...</span>
+                                }
+                                <InputFile OnChange="e => OnPreviewSelected(curtain.Id, e)" accept="image/*" />
+                            </div>
                             <button class="secondary-button" @onclick="() => SavePreviewAsync(curtain.Id)" disabled="@isBusy">Update preview</button>
                         </div>
                     </div>
@@ -126,6 +171,8 @@
     private NewCurtainModel _newCurtain = new();
     private IBrowserFile? _newPicture;
     private IBrowserFile? _newPreview;
+    private string? _newPictureDataUrl;
+    private string? _newPreviewDataUrl;
     private bool _isLoading = true;
     private bool _isCreating;
     private string? _message;
@@ -169,11 +216,17 @@
         }
     }
 
-    private void OnCreatePictureSelected(InputFileChangeEventArgs args) =>
+    private async Task OnCreatePictureSelected(InputFileChangeEventArgs args)
+    {
         _newPicture = args.File;
+        _newPictureDataUrl = await GeneratePreviewDataUrlAsync(args.File);
+    }
 
-    private void OnCreatePreviewSelected(InputFileChangeEventArgs args) =>
+    private async Task OnCreatePreviewSelected(InputFileChangeEventArgs args)
+    {
         _newPreview = args.File;
+        _newPreviewDataUrl = await GeneratePreviewDataUrlAsync(args.File);
+    }
 
     private async Task CreateCurtainAsync()
     {
@@ -203,6 +256,8 @@
             _newCurtain = new NewCurtainModel();
             _newPicture = null;
             _newPreview = null;
+            _newPictureDataUrl = null;
+            _newPreviewDataUrl = null;
 
             _message = "Curtain created.";
             await LoadCurtainsAsync();
@@ -216,6 +271,18 @@
         {
             _isCreating = false;
         }
+    }
+
+    private async Task SwitchLocaleAsync(Guid curtainId, string locale)
+    {
+        if (!_editors.TryGetValue(curtainId, out var editor) ||
+            string.Equals(editor.Locale, locale, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        editor.Locale = locale;
+        await LoadTranslationAsync(curtainId);
     }
 
     private async Task LoadTranslationAsync(Guid curtainId)
@@ -281,19 +348,21 @@
         }
     }
 
-    private void OnPictureSelected(Guid id, InputFileChangeEventArgs args)
+    private async Task OnPictureSelected(Guid id, InputFileChangeEventArgs args)
     {
         if (_editors.TryGetValue(id, out var editor))
         {
             editor.Picture = args.File;
+            editor.PictureDataUrl = await GeneratePreviewDataUrlAsync(args.File);
         }
     }
 
-    private void OnPreviewSelected(Guid id, InputFileChangeEventArgs args)
+    private async Task OnPreviewSelected(Guid id, InputFileChangeEventArgs args)
     {
         if (_editors.TryGetValue(id, out var editor))
         {
             editor.Preview = args.File;
+            editor.PreviewDataUrl = await GeneratePreviewDataUrlAsync(args.File);
         }
     }
 
@@ -315,6 +384,7 @@
             await CurtainsApi.UpdatePictureAsync(id, picturePart);
 
             editor.Picture = null;
+            editor.PictureDataUrl = null;
             _message = "Picture updated.";
             await LoadCurtainsAsync();
         }
@@ -347,6 +417,7 @@
             await CurtainsApi.UpdatePreviewAsync(id, previewPart);
 
             editor.Preview = null;
+            editor.PreviewDataUrl = null;
             _message = "Preview updated.";
             await LoadCurtainsAsync();
         }
@@ -367,6 +438,23 @@
         _errorMessage = null;
     }
 
+    private static async Task<string?> GeneratePreviewDataUrlAsync(IBrowserFile file)
+    {
+        try
+        {
+            const long maxPreviewSize = 5 * 1024 * 1024;
+            await using var stream = file.OpenReadStream(maxPreviewSize);
+            var buffer = new byte[stream.Length];
+            await stream.ReadExactlyAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+            return $"data:{file.ContentType};base64,{base64}";
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private sealed class NewCurtainModel
     {
         public string Name { get; set; } = string.Empty;
@@ -380,6 +468,8 @@
         public string Description { get; set; } = string.Empty;
         public IBrowserFile? Picture { get; set; }
         public IBrowserFile? Preview { get; set; }
+        public string? PictureDataUrl { get; set; }
+        public string? PreviewDataUrl { get; set; }
     }
 
 }

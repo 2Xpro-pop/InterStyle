@@ -6,10 +6,13 @@ namespace InterStyle.Curtains.Application.Commands;
 /// <summary>
 /// Handler for <see cref="CreateCurtainCommand"/>.
 /// </summary>
-public sealed class CreateCurtainCommandHandler(ICurtainRepository curtainRepository)
+public sealed class CreateCurtainCommandHandler(
+    ICurtainRepository curtainRepository,
+    ICurtainCacheInvalidator cacheInvalidator)
     : IRequestHandler<CreateCurtainCommand, CurtainId>
 {
     private readonly ICurtainRepository _curtainRepository = curtainRepository;
+    private readonly ICurtainCacheInvalidator _cacheInvalidator = cacheInvalidator;
 
     /// <inheritdoc />
     public async Task<CurtainId> Handle(CreateCurtainCommand request, CancellationToken cancellationToken)
@@ -29,6 +32,8 @@ public sealed class CreateCurtainCommandHandler(ICurtainRepository curtainReposi
 
         await _curtainRepository.AddAsync(curtain, cancellationToken);
         await _curtainRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        await _cacheInvalidator.InvalidateAllCurtainsAsync(cancellationToken);
 
         return curtain.Id;
     }

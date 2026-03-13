@@ -1,6 +1,7 @@
 using InterStyle.ApiShared;
 using InterStyle.ApiShared.Auth;
 using InterStyle.Curtains.Api;
+using InterStyle.Curtains.Application;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
@@ -28,10 +29,12 @@ builder.Services.AddApiVersioning();
 builder.Services.AddScoped<ICurtainRepository, CurtainRepository>();
 
 builder.Services.AddScoped<CurtainsQueries>();
-builder.Services.AddScoped<ICurtainQueries>(sp =>
+builder.Services.AddScoped(sp =>
     new CachedCurtainsQueries(
         sp.GetRequiredService<CurtainsQueries>(),
         sp.GetRequiredService<IDistributedCache>()));
+builder.Services.AddScoped<ICurtainQueries>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
+builder.Services.AddScoped<ICurtainCacheInvalidator>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

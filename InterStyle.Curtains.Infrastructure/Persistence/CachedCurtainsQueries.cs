@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterStyle.Curtains.Application;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
 using Microsoft.Extensions.Caching.Distributed;
@@ -7,17 +8,21 @@ namespace InterStyle.Curtains.Infrastructure.Persistence;
 
 /// <summary>
 /// Caching decorator for <see cref="ICurtainQueries"/>.
-/// Caches <see cref="GetAllAsync"/> results in Redis; other methods delegate directly.
+/// Caches <see cref="GetAllAsync"/> results in Redis using versioned keys.
+/// Implements <see cref="ICurtainCacheInvalidator"/> to bump the version on write operations.
 /// </summary>
-public sealed class CachedCurtainsQueries(ICurtainQueries inner, IDistributedCache cache) : ICurtainQueries
+public sealed class CachedCurtainsQueries(ICurtainQueries inner, IDistributedCache cache)
+    : ICurtainQueries, ICurtainCacheInvalidator
 {
+    private const string VersionKey = "curtains:all:version";
     private const string CacheKeyPrefix = "curtains:all:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(Locale locale, CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"{CacheKeyPrefix}{locale.Value}";
+        var version = await cache.GetStringAsync(VersionKey, cancellationToken) ?? "0";
+        var cacheKey = $"{CacheKeyPrefix}v{version}:{locale.Value}";
 
         var cached = await cache.GetStringAsync(cacheKey, cancellationToken);
 
@@ -42,5 +47,11 @@ public sealed class CachedCurtainsQueries(ICurtainQueries inner, IDistributedCac
     public Task<CurtainDto?> GetByIdAsync(Guid id, Locale locale, CancellationToken cancellationToken = default)
     {
         return inner.GetByIdAsync(id, locale, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task InvalidateAllCurtainsAsync(CancellationToken cancellationToken = default)
+    {
+        await cache.SetStringAsync(VersionKey, Guid.NewGuid().ToString("N"), cancellationToken);
     }
 }

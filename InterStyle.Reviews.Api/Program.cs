@@ -1,6 +1,7 @@
 using InterStyle.ApiShared;
 using InterStyle.Reviews.Api;
 using InterStyle.Reviews.Api.Services;
+using InterStyle.Reviews.Application;
 using InterStyle.Reviews.Application.Commands;
 using InterStyle.Reviews.Application.Queries;
 using InterStyle.Reviews.Domain;
@@ -26,10 +27,12 @@ builder.AddDefaultOpenApi(withApiVersioning);
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 builder.Services.AddScoped<ReviewQueries>();
-builder.Services.AddScoped<IReviewQueries>(sp =>
+builder.Services.AddScoped(sp =>
     new CachedReviewQueries(
         sp.GetRequiredService<ReviewQueries>(),
         sp.GetRequiredService<IDistributedCache>()));
+builder.Services.AddScoped<IReviewQueries>(sp => sp.GetRequiredService<CachedReviewQueries>());
+builder.Services.AddScoped<IReviewCacheInvalidator>(sp => sp.GetRequiredService<CachedReviewQueries>());
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

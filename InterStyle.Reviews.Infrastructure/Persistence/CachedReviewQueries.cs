@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterStyle.Reviews.Application;
 using InterStyle.Reviews.Application.Queries;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -6,10 +7,13 @@ namespace InterStyle.Reviews.Infrastructure.Persistence;
 
 /// <summary>
 /// Caching decorator for <see cref="IReviewQueries"/>.
-/// Caches <see cref="GetApprovedAsync"/> results in Redis; other methods delegate directly.
+/// Caches <see cref="GetApprovedAsync"/> results in Redis using versioned keys.
+/// Implements <see cref="IReviewCacheInvalidator"/> to bump the version on write operations.
 /// </summary>
-public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache cache) : IReviewQueries
+public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache cache)
+    : IReviewQueries, IReviewCacheInvalidator
 {
+    private const string VersionKey = "reviews:approved:version";
     private const string CacheKeyPrefix = "reviews:approved:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(2);
 
@@ -19,7 +23,8 @@ public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache 
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var cacheKey = $"{CacheKeyPrefix}{page}:{pageSize}";
+        var version = await cache.GetStringAsync(VersionKey, cancellationToken) ?? "0";
+        var cacheKey = $"{CacheKeyPrefix}v{version}:{page}:{pageSize}";
 
         var cached = await cache.GetStringAsync(cacheKey, cancellationToken);
 
@@ -53,5 +58,11 @@ public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache 
         CancellationToken cancellationToken = default)
     {
         return inner.GetStatisticsAsync(fromUtc, toUtc, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task InvalidateApprovedReviewsAsync(CancellationToken cancellationToken = default)
+    {
+        await cache.SetStringAsync(VersionKey, Guid.NewGuid().ToString("N"), cancellationToken);
     }
 }

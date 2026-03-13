@@ -6,10 +6,13 @@ namespace InterStyle.Curtains.Application.Commands;
 /// <summary>
 /// Handler for <see cref="ChangeCurtainPreviewCommand"/>.
 /// </summary>
-public sealed class ChangeCurtainPreviewCommandHandler(ICurtainRepository curtainRepository)
+public sealed class ChangeCurtainPreviewCommandHandler(
+    ICurtainRepository curtainRepository,
+    ICurtainCacheInvalidator cacheInvalidator)
     : IRequestHandler<ChangeCurtainPreviewCommand>
 {
     private readonly ICurtainRepository _curtainRepository = curtainRepository;
+    private readonly ICurtainCacheInvalidator _cacheInvalidator = cacheInvalidator;
 
     /// <inheritdoc />
     public async Task Handle(ChangeCurtainPreviewCommand request, CancellationToken cancellationToken)
@@ -25,5 +28,7 @@ public sealed class ChangeCurtainPreviewCommandHandler(ICurtainRepository curtai
 
         _curtainRepository.Update(curtain);
         await _curtainRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        await _cacheInvalidator.InvalidateAllCurtainsAsync(cancellationToken);
     }
 }

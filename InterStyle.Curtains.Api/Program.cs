@@ -1,11 +1,14 @@
 using InterStyle.ApiShared;
 using InterStyle.ApiShared.Auth;
 using InterStyle.Curtains.Api;
+using InterStyle.Curtains.Application;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
 using InterStyle.Curtains.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +29,21 @@ builder.Services.AddApiVersioning();
 
 builder.Services.AddScoped<ICurtainRepository, CurtainRepository>();
 
-builder.Services.AddScoped<ICurtainQueries, CurtainsQueries>();
+builder.Services.Configure<CurtainsCacheOptions>(builder.Configuration.GetSection(CurtainsCacheOptions.SectionName));
+
+builder.Services.AddScoped<CurtainsQueries>();
+builder.Services.AddScoped(sp =>
+    new CachedCurtainsQueries(
+        sp.GetRequiredService<CurtainsQueries>(),
+        sp.GetRequiredService<IDistributedCache>(),
+        sp.GetRequiredService<IOptionsSnapshot<CurtainsCacheOptions>>()));
+builder.Services.AddScoped<ICurtainQueries>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
+builder.Services.AddScoped<ICurtainCacheInvalidator>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("cache");
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

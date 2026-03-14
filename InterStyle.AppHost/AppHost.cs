@@ -29,6 +29,8 @@ if (builder.Environment.IsDevelopment())
     postgres.WithPgAdmin();
 }
 
+var cache = builder.AddRedis("cache");
+
 const string IdentityApiName = "interstyle-identityapi";
 const string IdentityApiUrl = $"http://{IdentityApiName}";
 
@@ -56,6 +58,8 @@ var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-lea
 var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
     .WithReference(reviewsDb).WaitFor(reviewsDb)
     .WithMediatrLicense(mediatRLicenseKey)
+    .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
+    .WithReference(cache)
     .WithJwtAuthority(IdentityApiUrl);
 
 var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
@@ -64,8 +68,8 @@ var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("intersty
     .WithReference(curtainsDb).WaitFor(curtainsDb)
     .WithReference(imageApi)
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
-    .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
     .WithMediatrLicense(mediatRLicenseKey)
+    .WithReference(cache)
     .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)

@@ -6,10 +6,13 @@ namespace InterStyle.Curtains.Application.Commands;
 /// <summary>
 /// Handler for <see cref="ChangeCurtainPictureCommand"/>.
 /// </summary>
-public sealed class ChangeCurtainPictureCommandHandler(ICurtainRepository curtainRepository)
+public sealed class ChangeCurtainPictureCommandHandler(
+    ICurtainRepository curtainRepository,
+    ICurtainCacheInvalidator cacheInvalidator)
     : IRequestHandler<ChangeCurtainPictureCommand>
 {
     private readonly ICurtainRepository _curtainRepository = curtainRepository;
+    private readonly ICurtainCacheInvalidator _cacheInvalidator = cacheInvalidator;
 
     /// <inheritdoc />
     public async Task Handle(ChangeCurtainPictureCommand request, CancellationToken cancellationToken)
@@ -25,5 +28,7 @@ public sealed class ChangeCurtainPictureCommandHandler(ICurtainRepository curtai
 
         _curtainRepository.Update(curtain);
         await _curtainRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        await _cacheInvalidator.InvalidateAllCurtainsAsync(cancellationToken);
     }
 }

@@ -6,10 +6,13 @@ namespace InterStyle.Curtains.Application.Commands;
 /// <summary>
 /// Handler for <see cref="UpsertCurtainTranslationCommand"/>.
 /// </summary>
-public sealed class UpsertCurtainTranslationCommandHandler(ICurtainRepository curtainRepository)
+public sealed class UpsertCurtainTranslationCommandHandler(
+    ICurtainRepository curtainRepository,
+    ICurtainCacheInvalidator cacheInvalidator)
     : IRequestHandler<UpsertCurtainTranslationCommand>
 {
     private readonly ICurtainRepository _curtainRepository = curtainRepository;
+    private readonly ICurtainCacheInvalidator _cacheInvalidator = cacheInvalidator;
 
     /// <inheritdoc />
     public async Task Handle(UpsertCurtainTranslationCommand request, CancellationToken cancellationToken)
@@ -28,5 +31,7 @@ public sealed class UpsertCurtainTranslationCommandHandler(ICurtainRepository cu
 
         _curtainRepository.Update(curtain);
         await _curtainRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        await _cacheInvalidator.InvalidateAllCurtainsAsync(cancellationToken);
     }
 }

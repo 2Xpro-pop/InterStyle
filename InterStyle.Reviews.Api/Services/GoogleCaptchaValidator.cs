@@ -39,7 +39,7 @@ public sealed class GoogleCaptchaValidator : ICaptchaValidator
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<RecaptchaResponse>(jsonResponse);
+            var result = JsonSerializer.Deserialize<RecaptchaResponse>(jsonResponse, JsonSerializerOptions.Web);
 
             return result?.Success ?? false;
         }

@@ -6,10 +6,13 @@ namespace InterStyle.Reviews.Application.Commands;
 /// <summary>
 /// Handler for <see cref="ApproveReviewCommand"/>.
 /// </summary>
-public sealed class ApproveReviewCommandHandler(IReviewRepository reviewRepository)
+public sealed class ApproveReviewCommandHandler(
+    IReviewRepository reviewRepository,
+    IReviewCacheInvalidator cacheInvalidator)
     : IRequestHandler<ApproveReviewCommand, bool>
 {
     private readonly IReviewRepository _reviewRepository = reviewRepository;
+    private readonly IReviewCacheInvalidator _cacheInvalidator = cacheInvalidator;
 
     /// <inheritdoc />
     public async Task<bool> Handle(ApproveReviewCommand request, CancellationToken cancellationToken)
@@ -28,6 +31,8 @@ public sealed class ApproveReviewCommandHandler(IReviewRepository reviewReposito
 
         _reviewRepository.Update(review);
         await _reviewRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        await _cacheInvalidator.InvalidateApprovedReviewsAsync(cancellationToken);
 
         return true;
     }

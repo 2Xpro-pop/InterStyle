@@ -25,6 +25,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".github/workflows/deploy.yml" />
     <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
     <File Path="sixlabors.lic" />
   </Folder>
   <Project Path="AdminPanel/AdminPanel.csproj" />

@@ -34,7 +34,7 @@ builder.Services.AddScoped(sp =>
     new CachedReviewQueries(
         sp.GetRequiredService<ReviewQueries>(),
         sp.GetRequiredService<IDistributedCache>(),
-        sp.GetRequiredService<IOptions<ReviewsCacheOptions>>()));
+        sp.GetRequiredService<IOptionsSnapshot<ReviewsCacheOptions>>()));
 builder.Services.AddScoped<IReviewQueries>(sp => sp.GetRequiredService<CachedReviewQueries>());
 builder.Services.AddScoped<IReviewCacheInvalidator>(sp => sp.GetRequiredService<CachedReviewQueries>());
 

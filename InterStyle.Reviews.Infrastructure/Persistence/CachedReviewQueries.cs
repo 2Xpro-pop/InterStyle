@@ -15,7 +15,7 @@ namespace InterStyle.Reviews.Infrastructure.Persistence;
 public sealed class CachedReviewQueries(
     IReviewQueries inner,
     IDistributedCache cache,
-    IOptions<ReviewsCacheOptions> options)
+    IOptionsSnapshot<ReviewsCacheOptions> options)
     : IReviewQueries, IReviewCacheInvalidator
 {
     private const string VersionKey = "reviews:approved:version";

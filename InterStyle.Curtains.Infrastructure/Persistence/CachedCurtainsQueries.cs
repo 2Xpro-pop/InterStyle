@@ -15,7 +15,7 @@ namespace InterStyle.Curtains.Infrastructure.Persistence;
 public sealed class CachedCurtainsQueries(
     ICurtainQueries inner,
     IDistributedCache cache,
-    IOptions<CurtainsCacheOptions> options)
+    IOptionsSnapshot<CurtainsCacheOptions> options)
     : ICurtainQueries, ICurtainCacheInvalidator
 {
     private const string VersionKey = "curtains:all:version";

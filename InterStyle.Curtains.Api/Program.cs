@@ -36,7 +36,7 @@ builder.Services.AddScoped(sp =>
     new CachedCurtainsQueries(
         sp.GetRequiredService<CurtainsQueries>(),
         sp.GetRequiredService<IDistributedCache>(),
-        sp.GetRequiredService<IOptions<CurtainsCacheOptions>>()));
+        sp.GetRequiredService<IOptionsSnapshot<CurtainsCacheOptions>>()));
 builder.Services.AddScoped<ICurtainQueries>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
 builder.Services.AddScoped<ICurtainCacheInvalidator>(sp => sp.GetRequiredService<CachedCurtainsQueries>());
 

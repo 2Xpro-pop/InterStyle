@@ -58,6 +58,7 @@ var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-lea
 var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
     .WithReference(reviewsDb).WaitFor(reviewsDb)
     .WithMediatrLicense(mediatRLicenseKey)
+    .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
     .WithReference(cache)
     .WithJwtAuthority(IdentityApiUrl);
 
@@ -67,7 +68,6 @@ var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("intersty
     .WithReference(curtainsDb).WaitFor(curtainsDb)
     .WithReference(imageApi)
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
-    .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
     .WithMediatrLicense(mediatRLicenseKey)
     .WithReference(cache)
     .WithJwtAuthority(IdentityApiUrl);

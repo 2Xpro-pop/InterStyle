@@ -2,22 +2,27 @@ using System.Text.Json;
 using InterStyle.Reviews.Application;
 using InterStyle.Reviews.Application.Queries;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 namespace InterStyle.Reviews.Infrastructure.Persistence;
 
 /// <summary>
 /// Caching decorator for <see cref="IReviewQueries"/>.
-/// Caches up to <see cref="MaxCachedItems"/> approved reviews in a single Redis entry.
+/// Caches up to <see cref="ReviewsCacheOptions.MaxCachedItems"/> approved reviews in a single Redis entry.
 /// Requests beyond that range fall through to the database.
 /// Implements <see cref="IReviewCacheInvalidator"/> to bump the version on write operations.
 /// </summary>
-public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache cache)
+public sealed class CachedReviewQueries(
+    IReviewQueries inner,
+    IDistributedCache cache,
+    IOptions<ReviewsCacheOptions> options)
     : IReviewQueries, IReviewCacheInvalidator
 {
-    private const int MaxCachedItems = 100;
     private const string VersionKey = "reviews:approved:version";
     private const string CacheKeyPrefix = "reviews:approved:";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(2);
+
+    private readonly int _maxCachedItems = options.Value.MaxCachedItems;
+    private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(options.Value.DurationMinutes);
 
     /// <inheritdoc />
     public async Task<PagedResult<ReviewDto>> GetApprovedAsync(
@@ -27,7 +32,7 @@ public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache 
     {
         var offset = (page - 1) * pageSize;
 
-        if (offset + pageSize > MaxCachedItems)
+        if (offset + pageSize > _maxCachedItems)
         {
             return await inner.GetApprovedAsync(page, pageSize, cancellationToken);
         }
@@ -79,14 +84,14 @@ public sealed class CachedReviewQueries(IReviewQueries inner, IDistributedCache 
             return JsonSerializer.Deserialize<ApprovedReviewsSnapshot>(cached)!;
         }
 
-        var result = await inner.GetApprovedAsync(page: 1, pageSize: MaxCachedItems, cancellationToken);
+        var result = await inner.GetApprovedAsync(page: 1, pageSize: _maxCachedItems, cancellationToken);
 
         var snapshot = new ApprovedReviewsSnapshot(result.Items, result.TotalCount);
         var json = JsonSerializer.Serialize(snapshot);
 
         await cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = CacheDuration
+            AbsoluteExpirationRelativeToNow = _cacheDuration
         }, cancellationToken);
 
         return snapshot;

@@ -3,6 +3,7 @@ using InterStyle.Curtains.Application;
 using InterStyle.Curtains.Application.Queries;
 using InterStyle.Curtains.Domain;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 namespace InterStyle.Curtains.Infrastructure.Persistence;
 
@@ -11,12 +12,16 @@ namespace InterStyle.Curtains.Infrastructure.Persistence;
 /// Caches <see cref="GetAllAsync"/> results in Redis using versioned keys.
 /// Implements <see cref="ICurtainCacheInvalidator"/> to bump the version on write operations.
 /// </summary>
-public sealed class CachedCurtainsQueries(ICurtainQueries inner, IDistributedCache cache)
+public sealed class CachedCurtainsQueries(
+    ICurtainQueries inner,
+    IDistributedCache cache,
+    IOptions<CurtainsCacheOptions> options)
     : ICurtainQueries, ICurtainCacheInvalidator
 {
     private const string VersionKey = "curtains:all:version";
     private const string CacheKeyPrefix = "curtains:all:";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
+    private readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(options.Value.DurationMinutes);
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<CurtainDto>> GetAllAsync(Locale locale, CancellationToken cancellationToken = default)
@@ -37,7 +42,7 @@ public sealed class CachedCurtainsQueries(ICurtainQueries inner, IDistributedCac
 
         await cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = CacheDuration
+            AbsoluteExpirationRelativeToNow = _cacheDuration
         }, cancellationToken);
 
         return result;

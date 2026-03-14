@@ -8,6 +8,7 @@ using InterStyle.Reviews.Domain;
 using InterStyle.Reviews.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +27,14 @@ builder.AddDefaultOpenApi(withApiVersioning);
 
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
+builder.Services.Configure<ReviewsCacheOptions>(builder.Configuration.GetSection(ReviewsCacheOptions.SectionName));
+
 builder.Services.AddScoped<ReviewQueries>();
 builder.Services.AddScoped(sp =>
     new CachedReviewQueries(
         sp.GetRequiredService<ReviewQueries>(),
-        sp.GetRequiredService<IDistributedCache>()));
+        sp.GetRequiredService<IDistributedCache>(),
+        sp.GetRequiredService<IOptions<ReviewsCacheOptions>>()));
 builder.Services.AddScoped<IReviewQueries>(sp => sp.GetRequiredService<CachedReviewQueries>());
 builder.Services.AddScoped<IReviewCacheInvalidator>(sp => sp.GetRequiredService<CachedReviewQueries>());
 

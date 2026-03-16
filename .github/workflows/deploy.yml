@@ -2,21 +2,23 @@ name: Deploy
 
 on:
   push:
-    branches: [ master ] 
+    branches: [ master ]
 
 permissions:
   contents: read
   packages: write
   id-token: write
 
-jobs:
+env:
+  DOTNET_ENVIRONMENT: Production
+  ASPIRE_ENVIRONMENT: Production
 
+jobs:
   deploy:
     if: ${{ !startsWith(github.event.head_commit.message, 'chore') && !startsWith(github.event.head_commit.message, 'docs') }}
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -27,9 +29,12 @@ jobs:
 
       - name: Install Aspire CLI
         run: |
-          echo "Installing Aspire CLI from install script..."
           curl -sSL https://aspire.dev/install.sh | bash
           echo "$HOME/.aspire/bin" >> $GITHUB_PATH
+
+      - name: Downcase repo
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -38,16 +43,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_TOKEN }}
 
-      - name: downcase REPO
-        run: |
-          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
       - name: Build and Push images with Aspire
         env:
           RepositoryUrl: https://github.com/${{ env.REPO }}
-  
-          Parameters__registry_endpoint: ghcr.io
-          Parameters__registry_repository: ${{ env.REPO }}
+
+          Parameters__registry-endpoint: ghcr.io
+          Parameters__registry-repository: ${{ env.REPO }}
 
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}
@@ -59,5 +60,79 @@ jobs:
           Parameters__jwt-active-kid: main
 
           Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
-
+          Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
         run: aspire do push --log-level debug
+
+      - name: Publish deployment artifacts
+        env:
+          RepositoryUrl: https://github.com/${{ env.REPO }}
+
+          Parameters__registry-endpoint: ghcr.io
+          Parameters__registry-repository: ${{ env.REPO }}
+
+          Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
+          Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}
+
+          Parameters__mediatr-license-key: ${{ secrets.MEDIATR_LICENSE_KEY }}
+
+          Parameters__jwt-signing-pfx: ${{ secrets.JWT_SIGNING_PFX }}
+          Parameters__jwt-signing-password: ${{ secrets.JWT_SIGNING_PASSWORD }}
+          Parameters__jwt-active-kid: main
+
+          Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
+          Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
+        run: aspire publish --log-level debug
+
+      - name: Show publish output
+        run: |
+          find aspire-output -maxdepth 5 -type f | sort
+
+      - name: Pack only compose artifacts
+        run: |
+          mkdir deploy-files
+          find aspire-output -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" -o -name ".env" \) -exec cp --parents {} deploy-files/ \;
+          tar -czf deploy-files.tar.gz deploy-files
+
+      - name: Copy deploy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "deploy-files.tar.gz"
+          target: "/opt/interstyle"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            mkdir -p /opt/interstyle/current
+            cd /opt/interstyle
+
+            rm -rf deploy-files
+            tar -xzf deploy-files.tar.gz
+
+            rm -rf /opt/interstyle/current/*
+            cp -R deploy-files/aspire-output/* /opt/interstyle/current/
+
+            cd /opt/interstyle/current
+
+            COMPOSE_FILE=$(find . -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" \) | head -n 1)
+
+            if [ -z "$COMPOSE_FILE" ]; then
+              echo "Compose file not found"
+              find . -maxdepth 5 -type f
+              exit 1
+            fi
+
+            echo "Using compose file: $COMPOSE_FILE"
+
+            docker compose -f "$COMPOSE_FILE" pull
+            docker compose -f "$COMPOSE_FILE" up -d
+
+            docker image prune -af

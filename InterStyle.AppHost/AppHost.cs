@@ -78,7 +78,8 @@ var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityAp
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
-var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel");
+var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel")
+    .PublishAsDockerFile();
 
 var gateway = builder.AddYarp("interstyle-gateway")
     .WithExternalHttpEndpoints();
@@ -86,6 +87,7 @@ var gateway = builder.AddYarp("interstyle-gateway")
 var client = builder.AddViteApp("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
     .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey)
+    .WithEnvironment("BROWSER", "none")
     .PublishAsDockerFile();
 
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client);

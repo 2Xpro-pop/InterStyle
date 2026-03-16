@@ -18,7 +18,7 @@ public static class YarpExtensions
         IResourceBuilder<ProjectResource> imageApi,
         IResourceBuilder<ProjectResource> identityApi,
         IResourceBuilder<ProjectResource> adminPanel,
-        IResourceBuilder<Aspire.Hosting.JavaScript.ViteAppResource> clientApp
+        IResourceBuilder<JavaScriptAppResource> clientApp
         )
     {
         return builder.WithConfiguration(yarp =>

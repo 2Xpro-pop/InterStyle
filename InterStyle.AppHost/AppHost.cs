@@ -85,7 +85,8 @@ var gateway = builder.AddYarp("interstyle-gateway")
 
 var client = builder.AddViteApp("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
-    .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey);
+    .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey)
+    .PublishAsDockerFile();
 
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client);
 

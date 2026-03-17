@@ -17,7 +17,7 @@ public static class YarpExtensions
         IResourceBuilder<ProjectResource> curtainsApi,
         IResourceBuilder<ProjectResource> imageApi,
         IResourceBuilder<ProjectResource> identityApi,
-        IResourceBuilder<ProjectResource> adminPanel,
+        EndpointReference adminPanel,
         EndpointReference clientApp
         )
     {

@@ -78,8 +78,8 @@ var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityAp
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
-var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel")
-    .PublishAsDockerFile();
+var adminPanel = builder.AddDockerfile("interstyle-admin-panel", "../", "AdminPanel/Dockerfile")
+    .WithHttpEndpoint(targetPort: 8080);
 
 
 var gateway = builder.AddYarp("interstyle-gateway")
@@ -93,6 +93,6 @@ var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(targetPort:3000);
 
-gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client.GetEndpoint("http"));
+gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel.GetEndpoint("http"), client.GetEndpoint("http"));
 
 builder.Build().Run();

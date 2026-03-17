@@ -84,14 +84,14 @@ var adminPanel = builder.AddProject<Projects.AdminPanel>("interstyle-admin-panel
 var gateway = builder.AddYarp("interstyle-gateway")
     .WithExternalHttpEndpoints();
 
-var client = builder.AddViteApp("interstyle-client", "../InterStyle.Client")
+var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithReference(gateway)
     .WaitFor(gateway)
     .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
     .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey)
     .WithEnvironment("BROWSER", "none")
-    .PublishAsDockerFile();
+    .WithHttpEndpoint(targetPort:3000);
 
-gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client);
+gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel, client.GetEndpoint("http"));
 
 builder.Build().Run();

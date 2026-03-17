@@ -128,7 +128,7 @@ jobs:
             STAGE_DIR=/tmp/interstyle-deploy
             INSTALL_DIR=/opt/interstyle
 
-            mkdir -p "$INSTALL_DIR/current"
+            test -d "$INSTALL_DIR/current"
 
             cd "$STAGE_DIR"
 

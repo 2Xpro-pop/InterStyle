@@ -83,14 +83,28 @@ jobs:
           Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
         run: aspire publish --log-level debug
 
+      - name: Resolve publish output directory
+        run: |
+          ASPIRE_OUTPUT_DIR=$(find . -type d -path "*/aspire-output" | head -n 1)
+
+          if [ -z "$ASPIRE_OUTPUT_DIR" ]; then
+            echo "Aspire publish output directory not found"
+            find . -maxdepth 5 -type d | sort
+            exit 1
+          fi
+
+          echo "Using Aspire output directory: $ASPIRE_OUTPUT_DIR"
+          echo "ASPIRE_OUTPUT_DIR=$ASPIRE_OUTPUT_DIR" >> $GITHUB_ENV
+
       - name: Show publish output
         run: |
-          find aspire-output -maxdepth 5 -type f | sort
+          find "$ASPIRE_OUTPUT_DIR" -maxdepth 5 -type f | sort
 
-      - name: Pack only compose artifacts
+      - name: Pack publish artifacts
         run: |
-          mkdir deploy-files
-          find aspire-output -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" -o -name ".env" \) -exec cp --parents {} deploy-files/ \;
+          rm -rf deploy-files deploy-files.tar.gz
+          mkdir -p deploy-files/aspire-output
+          cp -R "$ASPIRE_OUTPUT_DIR"/. deploy-files/aspire-output/
           tar -czf deploy-files.tar.gz deploy-files
 
       - name: Copy deploy files to server

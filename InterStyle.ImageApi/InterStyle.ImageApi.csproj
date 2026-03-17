@@ -12,6 +12,7 @@
 
 	<PropertyGroup Condition="$([System.OperatingSystem]::IsLinux())">
 		<PublishAot>true</PublishAot>
+		<NoWarn>$(NoWarn);IL2026</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(RepositoryUrl)' == ''">

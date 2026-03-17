@@ -128,23 +128,15 @@ jobs:
             STAGE_DIR=/tmp/interstyle-deploy
             INSTALL_DIR=/opt/interstyle
 
-            if mkdir -p "$INSTALL_DIR/current" 2>/dev/null; then
-              SUDO=""
-            elif command -v sudo >/dev/null 2>&1; then
-              SUDO="sudo"
-              $SUDO mkdir -p "$INSTALL_DIR/current"
-            else
-              echo "Cannot create $INSTALL_DIR/current and sudo is unavailable"
-              exit 1
-            fi
+            mkdir -p "$INSTALL_DIR/current"
 
             cd "$STAGE_DIR"
 
             rm -rf deploy-files
             tar -xzf deploy-files.tar.gz
 
-            $SUDO rm -rf "$INSTALL_DIR/current"/*
-            $SUDO cp -R deploy-files/aspire-output/. "$INSTALL_DIR/current/"
+            rm -rf "$INSTALL_DIR/current"/*
+            cp -R deploy-files/aspire-output/. "$INSTALL_DIR/current/"
 
             cd "$INSTALL_DIR/current"
 

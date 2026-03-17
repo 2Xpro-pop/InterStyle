@@ -114,7 +114,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "deploy-files.tar.gz"
-          target: "/opt/interstyle"
+          target: "/tmp/interstyle-deploy"
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.2.2
@@ -125,16 +125,28 @@ jobs:
           script: |
             set -euo pipefail
 
-            mkdir -p /opt/interstyle/current
-            cd /opt/interstyle
+            STAGE_DIR=/tmp/interstyle-deploy
+            INSTALL_DIR=/opt/interstyle
+
+            if mkdir -p "$INSTALL_DIR/current" 2>/dev/null; then
+              SUDO=""
+            elif command -v sudo >/dev/null 2>&1; then
+              SUDO="sudo"
+              $SUDO mkdir -p "$INSTALL_DIR/current"
+            else
+              echo "Cannot create $INSTALL_DIR/current and sudo is unavailable"
+              exit 1
+            fi
+
+            cd "$STAGE_DIR"
 
             rm -rf deploy-files
             tar -xzf deploy-files.tar.gz
 
-            rm -rf /opt/interstyle/current/*
-            cp -R deploy-files/aspire-output/* /opt/interstyle/current/
+            $SUDO rm -rf "$INSTALL_DIR/current"/*
+            $SUDO cp -R deploy-files/aspire-output/. "$INSTALL_DIR/current/"
 
-            cd /opt/interstyle/current
+            cd "$INSTALL_DIR/current"
 
             COMPOSE_FILE=$(find . -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" \) | head -n 1)
 

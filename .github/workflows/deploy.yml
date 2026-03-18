@@ -43,7 +43,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_TOKEN }}
 
-      - name: Build and Push images with Aspire
+      - name: Deploy with Aspire
+        working-directory: InterStyle.AppHost
         env:
           RepositoryUrl: https://github.com/${{ env.REPO }}
 
@@ -52,6 +53,7 @@ jobs:
 
           Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
           Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}
+          Parameters__cache-password: ${{ secrets.CACHE_PASSWORD }}
 
           Parameters__mediatr-license-key: ${{ secrets.MEDIATR_LICENSE_KEY }}
 
@@ -61,50 +63,19 @@ jobs:
 
           Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
           Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
-        run: aspire do push --log-level debug
-
-      - name: Publish deployment artifacts
-        env:
-          RepositoryUrl: https://github.com/${{ env.REPO }}
-
-          Parameters__registry-endpoint: ghcr.io
-          Parameters__registry-repository: ${{ env.REPO }}
-
-          Parameters__admin-login: ${{ secrets.ADMIN_LOGIN }}
-          Parameters__admin-password: ${{ secrets.ADMIN_PASSWORD }}
-
-          Parameters__mediatr-license-key: ${{ secrets.MEDIATR_LICENSE_KEY }}
-
-          Parameters__jwt-signing-pfx: ${{ secrets.JWT_SIGNING_PFX }}
-          Parameters__jwt-signing-password: ${{ secrets.JWT_SIGNING_PASSWORD }}
-          Parameters__jwt-active-kid: main
-
-          Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
-          Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
-        run: aspire publish --log-level debug
-
-      - name: Resolve publish output directory
         run: |
-          ASPIRE_OUTPUT_DIR=$(find . -type d -path "*/aspire-output" | head -n 1)
+          rm -rf aspire-output
+          aspire deploy --log-level debug
 
-          if [ -z "$ASPIRE_OUTPUT_DIR" ]; then
-            echo "Aspire publish output directory not found"
-            find . -maxdepth 5 -type d | sort
-            exit 1
-          fi
+          test -f aspire-output/docker-compose.yaml
+          test -f aspire-output/.env.Production
 
-          echo "Using Aspire output directory: $ASPIRE_OUTPUT_DIR"
-          echo "ASPIRE_OUTPUT_DIR=$ASPIRE_OUTPUT_DIR" >> $GITHUB_ENV
-
-      - name: Show publish output
-        run: |
-          find "$ASPIRE_OUTPUT_DIR" -maxdepth 5 -type f | sort
-
-      - name: Pack publish artifacts
+      - name: Pack deploy artifacts
         run: |
           rm -rf deploy-files deploy-files.tar.gz
-          mkdir -p deploy-files/aspire-output
-          cp -R "$ASPIRE_OUTPUT_DIR"/. deploy-files/aspire-output/
+          mkdir -p deploy-files
+          cp InterStyle.AppHost/aspire-output/docker-compose.yaml deploy-files/
+          cp InterStyle.AppHost/aspire-output/.env.Production deploy-files/
           tar -czf deploy-files.tar.gz deploy-files
 
       - name: Copy deploy files to server
@@ -126,40 +97,21 @@ jobs:
             set -euo pipefail
 
             STAGE_DIR=/tmp/interstyle-deploy
-            INSTALL_DIR=/opt/interstyle
+            INSTALL_DIR=/opt/interstyle/current
 
-            test -d "$INSTALL_DIR/current"
+            mkdir -p "$INSTALL_DIR"
 
             cd "$STAGE_DIR"
-
             rm -rf deploy-files
             tar -xzf deploy-files.tar.gz
 
-            rm -rf "$INSTALL_DIR/current"/*
-            cp -R deploy-files/aspire-output/. "$INSTALL_DIR/current/"
+            rm -f "$INSTALL_DIR/docker-compose.yaml" "$INSTALL_DIR/.env.Production"
+            cp deploy-files/docker-compose.yaml "$INSTALL_DIR/"
+            cp deploy-files/.env.Production "$INSTALL_DIR/"
 
-            cd "$INSTALL_DIR/current"
+            cd "$INSTALL_DIR"
 
-            COMPOSE_FILE=$(find . -type f \( -name "docker-compose.yml" -o -name "docker-compose.yaml" -o -name "compose.yml" -o -name "compose.yaml" \) | head -n 1)
-
-            if [ -z "$COMPOSE_FILE" ]; then
-              echo "Compose file not found"
-              find . -maxdepth 5 -type f
-              exit 1
-            fi
-
-            ENV_FILE=$(find . -type f \( -name ".env.Production" -o -name ".env.production" \) | head -n 1)
-
-            if [ -z "$ENV_FILE" ]; then
-              echo "Production env file not found"
-              find . -maxdepth 5 -type f | sort
-              exit 1
-            fi
-
-            echo "Using compose file: $COMPOSE_FILE"
-            echo "Using env file: $ENV_FILE"
-
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" pull
-            docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
+            docker compose --env-file .env.Production -f docker-compose.yaml pull
+            docker compose --env-file .env.Production -f docker-compose.yaml up -d --remove-orphans
 
             docker image prune -af

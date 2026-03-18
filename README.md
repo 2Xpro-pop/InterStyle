@@ -70,6 +70,7 @@ For a full local run, you will need environment parameters / secrets used by `Ap
 - `jwt-active-kid`
 - `captcha-google-token`
 - `mediatr-license-key`
+- `postgres-password`
 
 So for now, this repository is aimed more at exploring the architecture and code than providing a polished one-click onboarding experience.
 

@@ -107,6 +107,17 @@ var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(targetPort:3000);
 
+if(builder.Environment.IsDevelopment() || builder.Environment.IsStaging())
+{
+    client.WithEnvironment("PROTOCOL_HEADER", "x-forwarded-proto")
+          .WithEnvironment("HOST_HEADER", "x-forwarded-host");
+}
+
+if(builder.Environment.IsProduction())
+{
+    client.WithEnvironment("ORIGIN", "https://interstyle.kg");
+}
+
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel.GetEndpoint("http"), client.GetEndpoint("http"));
 
 builder.Build().Run();

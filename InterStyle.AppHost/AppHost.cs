@@ -86,8 +86,7 @@ var gateway = builder.AddYarp("interstyle-gateway");
 
 if(builder.Environment.IsProduction())
 {
-    gateway.WithHostPort(80)
-           .WithHostHttpsPort(443);
+    gateway.WithHostPort(8321);
 }
 
 gateway.WithExternalHttpEndpoints();

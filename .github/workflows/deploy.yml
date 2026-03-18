@@ -63,6 +63,8 @@ jobs:
 
           Parameters__captcha-google-token: ${{ secrets.CAPTCHA_GOOGLE_TOKEN }}
           Parameters__captcha-google-site-key: ${{ secrets.CAPTCHA_GOOGLE_SITE_KEY }}
+
+          Parameters__postgres-password: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           rm -rf aspire-output
           aspire deploy --log-level debug

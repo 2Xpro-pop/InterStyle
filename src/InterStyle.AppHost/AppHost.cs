@@ -29,6 +29,11 @@ if (builder.Environment.IsDevelopment())
     postgres.WithPgAdmin();
 }
 
+if(builder.Environment.IsProduction())
+{
+    postgres.WithPassword(builder.AddParameter("postgres-password", secret: true));
+}
+
 var cache = builder.AddRedis("cache");
 
 const string IdentityApiName = "interstyle-identityapi";

@@ -3,12 +3,12 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 COPY ["Directory.Packages.props", "."]
-COPY ["AdminPanel/AdminPanel.csproj", "AdminPanel/"]
-COPY ["InterStyle.Shared/InterStyle.Shared.csproj", "InterStyle.Shared/"]
+COPY ["src/AdminPanel/AdminPanel.csproj", "AdminPanel/"]
+COPY ["src/InterStyle.Shared/InterStyle.Shared.csproj", "InterStyle.Shared/"]
 RUN dotnet restore "AdminPanel/AdminPanel.csproj" --nologo
 
-COPY ["AdminPanel/", "AdminPanel/"]
-COPY ["InterStyle.Shared/", "InterStyle.Shared/"]
+COPY ["src/AdminPanel/", "AdminPanel/"]
+COPY ["src/InterStyle.Shared/", "InterStyle.Shared/"]
 
 WORKDIR /src/AdminPanel
 RUN dotnet publish "AdminPanel.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --nologo
@@ -16,7 +16,7 @@ RUN dotnet publish "AdminPanel.csproj" -c $BUILD_CONFIGURATION -o /app/publish /
 FROM nginx:1.28-alpine AS final
 WORKDIR /usr/share/nginx/html
 
-COPY ["AdminPanel/nginx.conf", "/etc/nginx/conf.d/default.conf"]
+COPY ["src/AdminPanel/nginx.conf", "/etc/nginx/conf.d/default.conf"]
 COPY --from=publish /app/publish/wwwroot ./
 
 EXPOSE 8080

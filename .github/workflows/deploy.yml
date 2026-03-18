@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.GH_TOKEN }}
 
       - name: Deploy with Aspire
-        working-directory: InterStyle.AppHost
+        working-directory: src/InterStyle.AppHost
         env:
           RepositoryUrl: https://github.com/${{ env.REPO }}
 
@@ -74,8 +74,8 @@ jobs:
         run: |
           rm -rf deploy-files deploy-files.tar.gz
           mkdir -p deploy-files
-          cp InterStyle.AppHost/aspire-output/docker-compose.yaml deploy-files/
-          cp InterStyle.AppHost/aspire-output/.env.Production deploy-files/
+          cp src/InterStyle.AppHost/aspire-output/docker-compose.yaml deploy-files/
+          cp src/InterStyle.AppHost/aspire-output/.env.Production deploy-files/
           tar -czf deploy-files.tar.gz deploy-files
 
       - name: Copy deploy files to server

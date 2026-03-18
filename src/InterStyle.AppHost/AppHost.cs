@@ -78,7 +78,10 @@ var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityAp
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
-var adminPanel = builder.AddDockerfile("interstyle-admin-panel", "../", "AdminPanel/Dockerfile")
+var adminPanel = builder.AddDockerfile(
+    "interstyle-admin-panel",
+    "../../",
+    "src/AdminPanel/Dockerfile")
     .WithHttpEndpoint(targetPort: 8080);
 
 

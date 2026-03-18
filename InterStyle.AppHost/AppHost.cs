@@ -82,14 +82,15 @@ var adminPanel = builder.AddDockerfile("interstyle-admin-panel", "../", "AdminPa
     .WithHttpEndpoint(targetPort: 8080);
 
 
-var gateway = builder.AddYarp("interstyle-gateway")
-    .WithExternalHttpEndpoints();
+var gateway = builder.AddYarp("interstyle-gateway");
 
 if(builder.Environment.IsProduction())
 {
-    gateway.WithHttpEndpoint()
-        .WithHttpsEndpoint();
+    gateway.WithHostPort(80)
+           .WithHostHttpsPort(443);
 }
+
+gateway.WithExternalHttpEndpoints();
 
 var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithReference(gateway)

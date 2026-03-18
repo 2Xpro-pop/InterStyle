@@ -85,6 +85,12 @@ var adminPanel = builder.AddDockerfile("interstyle-admin-panel", "../", "AdminPa
 var gateway = builder.AddYarp("interstyle-gateway")
     .WithExternalHttpEndpoints();
 
+if(builder.Environment.IsProduction())
+{
+    gateway.WithHttpEndpoint()
+        .WithHttpsEndpoint();
+}
+
 var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithReference(gateway)
     .WaitFor(gateway)

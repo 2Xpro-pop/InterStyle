@@ -24,8 +24,9 @@ public static class CurtainsApi
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
-
             var logger = loggerFactory.CreateLogger("CurtainsApi");
+
+            logger.LogInformation("Creating curtain {CurtainName}", model.Name);
 
             var client = httpClientFactory.CreateClient("ImageApi");
 
@@ -37,9 +38,9 @@ public static class CurtainsApi
                 pictureId = await UploadImageAsync(client, model.Picture, ct);
                 previewId = await UploadImageAsync(client, model.Preview, ct);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                logger.LogError("Image service is unavailable.");
+                logger.LogError(ex, "Image service is unavailable while creating curtain {CurtainName}", model.Name);
                 return Results.Problem(
                     title: "Image service is unavailable",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
@@ -52,31 +53,53 @@ public static class CurtainsApi
                 new CreateCurtainCommand(model.Name, model.Description, pictureUrl, previewUrl),
                 ct);
 
+            logger.LogInformation("Curtain {CurtainId} created successfully", id.Value);
+
             return Results.Created($"/api/curtains/{id.Value}", new { id = id.Value });
         }).DisableAntiforgery()
           .RequireAuthorization(InterStylePolicies.AdminOnly);
 
 
-        api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
             var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
+
+            logger.LogInformation("Retrieving all curtains for locale {Locale}", effectiveLocale);
+
             var result = await queries.GetAllAsync(effectiveLocale, ct);
             return Results.Ok(result);
         }).AllowAnonymous();
 
-        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, CancellationToken ct) =>
+        api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
             var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
+
+            logger.LogInformation("Retrieving curtain {CurtainId} for locale {Locale}", id, effectiveLocale);
+
             var result = await queries.GetByIdAsync(id, effectiveLocale, ct);
-            return result is not null ? Results.Ok(result) : Results.NotFound();
+
+            if (result is null)
+            {
+                logger.LogWarning("Curtain {CurtainId} not found", id);
+                return Results.NotFound();
+            }
+
+            return Results.Ok(result);
         }).AllowAnonymous();
 
-        api.MapPut("{id:guid}/translations", async (Guid id, UpsertCurtainTranslationCommand command, IMediator mediator, CancellationToken ct) =>
+        api.MapPut("{id:guid}/translations", async (Guid id, UpsertCurtainTranslationCommand command, IMediator mediator, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
+
             if (id != command.CurtainId)
             {
+                logger.LogWarning("Route id {RouteId} does not match command id {CommandId} for translation upsert", id, command.CurtainId);
                 return Results.BadRequest(new { error = "Route id does not match command id." });
             }
+
+            logger.LogInformation("Upserting translation for curtain {CurtainId}", id);
 
             await mediator.Send(command, ct);
             return Results.NoContent();
@@ -87,12 +110,18 @@ public static class CurtainsApi
             [FromForm] ChangePictureViewModel model,
             IHttpClientFactory httpClientFactory,
             IMediator mediator,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
+
             if (model.Picture is null || model.Picture.Length == 0)
             {
+                logger.LogWarning("Picture file is missing for curtain {CurtainId}", id);
                 return Results.BadRequest(new { error = "Picture file is required." });
             }
+
+            logger.LogInformation("Changing picture for curtain {CurtainId}", id);
 
             var client = httpClientFactory.CreateClient("ImageApi");
 
@@ -101,8 +130,9 @@ public static class CurtainsApi
             {
                 imageId = await UploadImageAsync(client, model.Picture, ct);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.LogError(ex, "Image service is unavailable while changing picture for curtain {CurtainId}", id);
                 return Results.Problem(
                     title: "Image service is unavailable",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
@@ -111,6 +141,8 @@ public static class CurtainsApi
             var pictureUrl = $"/api/images/{imageId}";
 
             await mediator.Send(new ChangeCurtainPictureCommand(id, pictureUrl), ct);
+
+            logger.LogInformation("Picture updated for curtain {CurtainId}", id);
 
             return Results.NoContent();
         }).DisableAntiforgery()
@@ -121,12 +153,18 @@ public static class CurtainsApi
             [FromForm] ChangePictureViewModel model,
             IHttpClientFactory httpClientFactory,
             IMediator mediator,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("CurtainsApi");
+
             if (model.Picture is null || model.Picture.Length == 0)
             {
+                logger.LogWarning("Preview file is missing for curtain {CurtainId}", id);
                 return Results.BadRequest(new { error = "Picture file is required." });
             }
+
+            logger.LogInformation("Changing preview for curtain {CurtainId}", id);
 
             var client = httpClientFactory.CreateClient("ImageApi");
 
@@ -135,8 +173,9 @@ public static class CurtainsApi
             {
                 imageId = await UploadImageAsync(client, model.Picture, ct);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.LogError(ex, "Image service is unavailable while changing preview for curtain {CurtainId}", id);
                 return Results.Problem(
                     title: "Image service is unavailable",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
@@ -145,6 +184,8 @@ public static class CurtainsApi
             var previewUrl = $"/api/images/{imageId}";
 
             await mediator.Send(new ChangeCurtainPreviewCommand(id, previewUrl), ct);
+
+            logger.LogInformation("Preview updated for curtain {CurtainId}", id);
 
             return Results.NoContent();
         }).DisableAntiforgery()

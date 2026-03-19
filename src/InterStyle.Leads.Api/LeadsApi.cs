@@ -13,9 +13,16 @@ public static class LeadsApi
             .HasApiVersion(1.0)
             .WithTags("Leads");
 
-        api.MapPost("", async (CreateLeadCommand command, IMediator mediator, CancellationToken ct) =>
+        api.MapPost("", async (CreateLeadCommand command, IMediator mediator, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("LeadsApi");
+
+            logger.LogInformation("Creating lead");
+
             var id = await mediator.Send(command, ct);
+
+            logger.LogInformation("Lead {LeadId} created successfully", id.Value);
+
             return Results.Ok(new { id = id.Value });
         });
 
@@ -23,16 +30,22 @@ public static class LeadsApi
             DateTimeOffset? fromUtc,
             DateTimeOffset? toUtc,
             ILeadQueries queries,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("LeadsApi");
+
             var now = DateTimeOffset.UtcNow;
             var from = fromUtc ?? now.AddDays(-30);
             var to = toUtc ?? now;
 
             if (from >= to)
             {
+                logger.LogWarning("Invalid date range for lead statistics: {FromUtc} >= {ToUtc}", from, to);
                 return Results.BadRequest(new { error = "fromUtc must be earlier than toUtc." });
             }
+
+            logger.LogInformation("Retrieving lead statistics from {FromUtc} to {ToUtc}", from, to);
 
             var stats = await queries.GetStatisticsAsync(from, to, ct);
             return Results.Ok(stats);

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace InterStyle.Leads.Api;
+namespace InterStyle.ApiShared;
 
 internal static class ActivityExtensions
 {

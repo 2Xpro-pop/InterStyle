@@ -19,7 +19,10 @@ var compose = builder.AddDockerComposeEnvironment("compose");
 var endpoint = builder.AddParameter("registry-endpoint");
 var repository = builder.AddParameter("registry-repository");
 #pragma warning disable ASPIRECOMPUTE003
-builder.AddContainerRegistry("container-registry", endpoint, repository);
+if(builder.Environment.IsProduction())
+{
+    builder.AddContainerRegistry("container-registry", endpoint, repository);
+}
 #pragma warning restore ASPIRECOMPUTE003
 
 var postgres = builder.AddPostgres("postgres");
@@ -58,6 +61,7 @@ var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-lea
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithReference(leadsDb).WaitFor(leadsDb)
     .WithMediatrLicense(mediatRLicenseKey)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
 var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
@@ -65,9 +69,11 @@ var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle
     .WithMediatrLicense(mediatRLicenseKey)
     .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
     .WithReference(cache)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
-var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
+var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi")
+    .WithHttpHealthCheck("/health");
 
 var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
     .WithReference(curtainsDb).WaitFor(curtainsDb)
@@ -75,11 +81,13 @@ var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("intersty
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithMediatrLicense(mediatRLicenseKey)
     .WithReference(cache)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
     .WithEnvironment("Admin__Username", adminLogin)
     .WithEnvironment("Admin__Password", adminPassword)
+    .WithHttpHealthCheck("/health")
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 

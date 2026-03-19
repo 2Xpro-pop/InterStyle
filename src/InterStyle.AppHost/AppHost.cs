@@ -1,4 +1,5 @@
 using InterStyle.AppHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ var compose = builder.AddDockerComposeEnvironment("compose");
 var endpoint = builder.AddParameter("registry-endpoint");
 var repository = builder.AddParameter("registry-repository");
 #pragma warning disable ASPIRECOMPUTE003
-if(builder.Environment.IsProduction())
+if(ShouldUseContainerRegistry())
 {
     builder.AddContainerRegistry("container-registry", endpoint, repository);
 }
@@ -128,4 +129,14 @@ if(builder.Environment.IsProduction())
 
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel.GetEndpoint("http"), client.GetEndpoint("http"));
 
-builder.Build().Run();
+var app = builder.Build();
+
+app.Run();
+
+
+bool ShouldUseContainerRegistry()
+{
+    var useContainerRegistry = builder.Configuration.GetValue<bool?>("use-container-registry") ?? true;
+
+    return builder.Environment.IsProduction() && useContainerRegistry;
+}

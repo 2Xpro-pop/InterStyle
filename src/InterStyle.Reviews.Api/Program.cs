@@ -48,6 +48,8 @@ builder.Services.AddHttpClient<ICaptchaValidator, GoogleCaptchaValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.ConfigureOpenTelemetry("InterStyle.Reviews.Api");
+
 var app = builder.Build();
 
 app.UseSwaggerDefaults();

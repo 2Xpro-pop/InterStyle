@@ -1,9 +1,11 @@
-﻿using InterStyle.ApiShared.Auth;
+﻿using InterStyle.ApiShared;
+using InterStyle.ApiShared.Auth;
 using InterStyle.Curtains.Api.ViewModels;
 using InterStyle.Curtains.Application.Commands;
 using InterStyle.Curtains.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -11,6 +13,8 @@ namespace InterStyle.Curtains.Api;
 
 public static class CurtainsApi
 {
+    private static readonly ActivitySource ActivitySource = new("InterStyle.Curtains.Api");
+
     public static RouteGroupBuilder MapCurainsApiV1(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("api/curtains")
@@ -24,8 +28,10 @@ public static class CurtainsApi
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("CreateCurtain");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
 
+            activity?.SetTag("curtain.name", model.Name);
             logger.LogInformation("Creating curtain {CurtainName}", model.Name);
 
             var client = httpClientFactory.CreateClient("ImageApi");
@@ -40,6 +46,7 @@ public static class CurtainsApi
             }
             catch (Exception ex)
             {
+                activity?.SetExceptionTags(ex);
                 logger.LogError(ex, "Image service is unavailable while creating curtain {CurtainName}", model.Name);
                 return Results.Problem(
                     title: "Image service is unavailable",
@@ -53,6 +60,7 @@ public static class CurtainsApi
                 new CreateCurtainCommand(model.Name, model.Description, pictureUrl, previewUrl),
                 ct);
 
+            activity?.SetTag("curtain.id", id.Value);
             logger.LogInformation("Curtain {CurtainId} created successfully", id.Value);
 
             return Results.Created($"/api/curtains/{id.Value}", new { id = id.Value });
@@ -62,9 +70,11 @@ public static class CurtainsApi
 
         api.MapGet("", async ([FromQuery] string? locale, ICurtainQueries queries, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("GetAllCurtains");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
             var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
 
+            activity?.SetTag("curtain.locale", effectiveLocale.ToString());
             logger.LogInformation("Retrieving all curtains for locale {Locale}", effectiveLocale);
 
             var result = await queries.GetAllAsync(effectiveLocale, ct);
@@ -73,15 +83,19 @@ public static class CurtainsApi
 
         api.MapGet("{id:guid}", async (Guid id, [FromQuery] string? locale, ICurtainQueries queries, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("GetCurtainById");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
             var effectiveLocale = locale is not null ? Domain.Locale.Create(locale) : Domain.Locale.Default;
 
+            activity?.SetTag("curtain.id", id);
+            activity?.SetTag("curtain.locale", effectiveLocale.ToString());
             logger.LogInformation("Retrieving curtain {CurtainId} for locale {Locale}", id, effectiveLocale);
 
             var result = await queries.GetByIdAsync(id, effectiveLocale, ct);
 
             if (result is null)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, "Curtain not found");
                 logger.LogWarning("Curtain {CurtainId} not found", id);
                 return Results.NotFound();
             }
@@ -91,10 +105,14 @@ public static class CurtainsApi
 
         api.MapPut("{id:guid}/translations", async (Guid id, UpsertCurtainTranslationCommand command, IMediator mediator, ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("UpsertCurtainTranslation");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
+
+            activity?.SetTag("curtain.id", id);
 
             if (id != command.CurtainId)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, "Route id mismatch");
                 logger.LogWarning("Route id {RouteId} does not match command id {CommandId} for translation upsert", id, command.CurtainId);
                 return Results.BadRequest(new { error = "Route id does not match command id." });
             }
@@ -113,10 +131,14 @@ public static class CurtainsApi
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("ChangeCurtainPicture");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
+
+            activity?.SetTag("curtain.id", id);
 
             if (model.Picture is null || model.Picture.Length == 0)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, "Missing picture file");
                 logger.LogWarning("Picture file is missing for curtain {CurtainId}", id);
                 return Results.BadRequest(new { error = "Picture file is required." });
             }
@@ -132,6 +154,7 @@ public static class CurtainsApi
             }
             catch (Exception ex)
             {
+                activity?.SetExceptionTags(ex);
                 logger.LogError(ex, "Image service is unavailable while changing picture for curtain {CurtainId}", id);
                 return Results.Problem(
                     title: "Image service is unavailable",
@@ -156,10 +179,14 @@ public static class CurtainsApi
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            using var activity = ActivitySource.StartActivity("ChangeCurtainPreview");
             var logger = loggerFactory.CreateLogger("CurtainsApi");
+
+            activity?.SetTag("curtain.id", id);
 
             if (model.Picture is null || model.Picture.Length == 0)
             {
+                activity?.SetStatus(ActivityStatusCode.Error, "Missing preview file");
                 logger.LogWarning("Preview file is missing for curtain {CurtainId}", id);
                 return Results.BadRequest(new { error = "Picture file is required." });
             }
@@ -175,6 +202,7 @@ public static class CurtainsApi
             }
             catch (Exception ex)
             {
+                activity?.SetExceptionTags(ex);
                 logger.LogError(ex, "Image service is unavailable while changing preview for curtain {CurtainId}", id);
                 return Results.Problem(
                     title: "Image service is unavailable",

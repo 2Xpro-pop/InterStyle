@@ -35,6 +35,8 @@ builder.Services.AddScoped<ILeadQueries, LeadQueries>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.ConfigureOpenTelemetry("InterStyle.Leads.Api");
+
 var app = builder.Build();
 
 app.UseSwaggerDefaults();

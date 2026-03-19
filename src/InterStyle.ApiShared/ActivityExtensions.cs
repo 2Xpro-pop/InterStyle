@@ -2,7 +2,7 @@
 
 namespace InterStyle.ApiShared;
 
-internal static class ActivityExtensions
+public static class ActivityExtensions
 {
     // See https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/exceptions/
     public static void SetExceptionTags(this Activity activity, Exception ex)

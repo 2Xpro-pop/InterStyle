@@ -69,6 +69,8 @@ builder.Services.AddHttpClient("ImageApi", client =>
 
 builder.Services.AddServiceDiscovery();
 
+builder.ConfigureOpenTelemetry("InterStyle.Curtains.Api");
+
 var app = builder.Build();
 
 app.UseSwaggerDefaults();

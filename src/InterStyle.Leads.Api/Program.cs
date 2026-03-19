@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecksDefaults();
 
 builder.Services.AddInterStyleMediatR<CreateLeadCommand>(builder.Configuration);
 

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecksDefaults();
 
 builder.Services.AddInterStyleMediatR<ApproveReviewCommand>(builder.Configuration);
 

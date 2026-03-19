@@ -27,6 +27,8 @@ builder.Services.AddInterStyleJwtAuth(builder.Configuration);
 builder.Services.AddSingleton<JwtSigningKeyStore>();
 builder.Services.AddSingleton<JwtTokenIssuer>();
 
+builder.ConfigureOpenTelemetry("InterStyle.IdentityApi");
+
 var app = builder.Build();
 
 app.UseSwaggerDefaults();

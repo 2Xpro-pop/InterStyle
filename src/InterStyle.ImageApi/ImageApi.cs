@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using InterStyle.ApiShared;
 using InterStyle.ImageApi.Application.Commands.OptimizeImage;
 using InterStyle.ImageApi.Application.Commands.UploadImage;
 using InterStyle.ImageApi.Application.Queries.GetImageStatus;
@@ -8,6 +10,7 @@ namespace InterStyle.ImageApi;
 
 public static class ImageApi
 {
+    private static readonly ActivitySource ActivitySource = new("InterStyle.ImageApi");
     public static RouteGroupBuilder MapImageApiV1(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("api/images")
@@ -16,6 +19,8 @@ public static class ImageApi
 
         api.MapGet("", () =>
         {
+            using var activity = ActivitySource.StartActivity("ListImages");
+
             var environment = app.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
             var assets = environment.WebRootPath;
 
@@ -27,6 +32,8 @@ public static class ImageApi
                 .Select(Path.GetFileName)
                 .ToArray();
 
+            activity?.AddTag("image.count", files.Length);
+
             return files;
         });
 
@@ -35,11 +42,18 @@ public static class ImageApi
                     UploadImageCommandHandler handler,
                     CancellationToken cancellationToken) =>
         {
+            using var activity = ActivitySource.StartActivity("UploadImage");
+            activity?.AddTag("image.filename", file.FileName);
+            activity?.AddTag("image.content_type", file.ContentType);
+            activity?.AddTag("image.size", file.Length);
+
             await using var stream = file.OpenReadStream();
 
             var result = await handler.Handle(
                 new UploadImageCommand(stream, file.FileName, file.ContentType),
                 cancellationToken);
+
+            activity?.AddTag("image.id", result.ImageId);
 
             return Results.Accepted($"/images/{result.ImageId}", result);
         }).DisableAntiforgery();
@@ -49,6 +63,9 @@ public static class ImageApi
             GetImageStatusQueryHandler handler,
             CancellationToken cancellationToken) =>
         {
+            using var activity = ActivitySource.StartActivity("GetImageStatus");
+            activity?.AddTag("image.id", id);
+
             return Results.Ok(await handler.Handle(
                 new GetImageStatusQuery(id),
                 cancellationToken));
@@ -59,13 +76,20 @@ public static class ImageApi
             GetOptimizedImageQueryHandler handler,
             CancellationToken cancellationToken) =>
         {
+            using var activity = ActivitySource.StartActivity("GetOptimizedImage");
+            activity?.AddTag("image.id", id);
+
             var result = await handler.Handle(
                 new GetOptimizedImageQuery(id),
                 cancellationToken);
 
-            return result is null
-                ? Results.NotFound()
-                : Results.File(result, "image/jpeg");
+            if (result is null)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, "Image not found");
+                return Results.NotFound();
+            }
+
+            return Results.File(result, "image/jpeg");
         });
 
         return api;

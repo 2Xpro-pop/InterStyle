@@ -59,6 +59,8 @@ builder.Services.AddScoped<GetOptimizedImageQueryHandler>();
 
 builder.Services.AddHostedService<ImageOptimizationWorker>();
 
+builder.ConfigureOpenTelemetry("InterStyle.ImageApi");
+
 var app = builder.Build();
 
 app.UseStaticFiles("/assets");

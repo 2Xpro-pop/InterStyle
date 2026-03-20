@@ -188,8 +188,13 @@
         _isLoading = true;
         ClearMessages();
 
+        using var activity = Telemetry.ActivitySource.StartActivity("LoadCurtains");
+        activity?.AddTag("curtain.locale", _availableLocales[0]);
+
         try
         {
+            Logger.LogInformation("Loading curtains for locale {Locale}", _availableLocales[0]);
+
             var items = await CurtainsApi.GetAllAsync(_availableLocales[0]);
             _curtains.Clear();
             _curtains.AddRange(items);
@@ -204,11 +209,15 @@
                     Description = item.Description
                 };
             }
+
+            activity?.AddTag("curtain.count", _curtains.Count);
+            Logger.LogInformation("Loaded {CurtainCount} curtain(s)", _curtains.Count);
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to load curtains.";
-            Logger.LogError(exception, "Failed to load curtains.");
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Failed to load curtains for locale {Locale}", _availableLocales[0]);
         }
         finally
         {
@@ -238,13 +247,19 @@
             _newPreview is null)
         {
             _errorMessage = "Name, description, picture and preview are required.";
+            Logger.LogWarning("Create curtain validation failed: missing required fields");
             return;
         }
 
         _isCreating = true;
 
+        using var activity = Telemetry.ActivitySource.StartActivity("CreateCurtain");
+        activity?.AddTag("curtain.name", _newCurtain.Name);
+
         try
         {
+            Logger.LogInformation("Creating curtain {CurtainName}", _newCurtain.Name);
+
             await using var pictureStream = _newPicture.OpenReadStream(20 * 1024 * 1024);
             await using var previewStream = _newPreview.OpenReadStream(20 * 1024 * 1024);
 
@@ -252,6 +267,8 @@
             var previewPart = new StreamPart(previewStream, _newPreview.Name, _newPreview.ContentType);
 
             await CurtainsApi.CreateAsync(picturePart, previewPart, _newCurtain.Name, _newCurtain.Description);
+
+            Logger.LogInformation("Curtain {CurtainName} created successfully", _newCurtain.Name);
 
             _newCurtain = new NewCurtainModel();
             _newPicture = null;
@@ -265,7 +282,8 @@
         catch (Exception exception)
         {
             _errorMessage = "Failed to create curtain.";
-            Logger.LogError(exception, "Failed to create curtain.");
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Failed to create curtain {CurtainName}", _newCurtain.Name);
         }
         finally
         {
@@ -330,17 +348,25 @@
         ClearMessages();
         _busyItems.Add(id);
 
+        using var activity = Telemetry.ActivitySource.StartActivity("SaveTranslation");
+        activity?.AddTag("curtain.id", id);
+        activity?.AddTag("curtain.locale", editor.Locale);
+
         try
         {
+            Logger.LogInformation("Saving translation for curtain {CurtainId}, locale {Locale}", id, editor.Locale);
+
             var request = new UpsertCurtainTranslationRequest(id, editor.Locale, editor.Name, editor.Description);
             await CurtainsApi.UpsertTranslationAsync(id, request);
 
+            Logger.LogInformation("Translation saved for curtain {CurtainId}, locale {Locale}", id, editor.Locale);
             _message = "Translation saved.";
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to save translation.";
-            Logger.LogError(exception, "Failed to save curtain translation for {CurtainId}", id);
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Failed to save translation for curtain {CurtainId}, locale {Locale}", id, editor.Locale);
         }
         finally
         {
@@ -377,21 +403,28 @@
         ClearMessages();
         _busyItems.Add(id);
 
+        using var activity = Telemetry.ActivitySource.StartActivity("SavePicture");
+        activity?.AddTag("curtain.id", id);
+
         try
         {
+            Logger.LogInformation("Updating picture for curtain {CurtainId}", id);
+
             await using var stream = editor.Picture.OpenReadStream(20 * 1024 * 1024);
             var picturePart = new StreamPart(stream, editor.Picture.Name, editor.Picture.ContentType);
             await CurtainsApi.UpdatePictureAsync(id, picturePart);
 
             editor.Picture = null;
             editor.PictureDataUrl = null;
+            Logger.LogInformation("Picture updated for curtain {CurtainId}", id);
             _message = "Picture updated.";
             await LoadCurtainsAsync();
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to update picture.";
-            Logger.LogError(exception, "Failed to update picture for {CurtainId}", id);
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Failed to update picture for curtain {CurtainId}", id);
         }
         finally
         {
@@ -410,21 +443,28 @@
         ClearMessages();
         _busyItems.Add(id);
 
+        using var activity = Telemetry.ActivitySource.StartActivity("SavePreview");
+        activity?.AddTag("curtain.id", id);
+
         try
         {
+            Logger.LogInformation("Updating preview for curtain {CurtainId}", id);
+
             await using var stream = editor.Preview.OpenReadStream(20 * 1024 * 1024);
             var previewPart = new StreamPart(stream, editor.Preview.Name, editor.Preview.ContentType);
             await CurtainsApi.UpdatePreviewAsync(id, previewPart);
 
             editor.Preview = null;
             editor.PreviewDataUrl = null;
+            Logger.LogInformation("Preview updated for curtain {CurtainId}", id);
             _message = "Preview updated.";
             await LoadCurtainsAsync();
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to update preview.";
-            Logger.LogError(exception, "Failed to update preview for {CurtainId}", id);
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Failed to update preview for curtain {CurtainId}", id);
         }
         finally
         {

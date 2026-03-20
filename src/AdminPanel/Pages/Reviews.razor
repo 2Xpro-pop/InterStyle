@@ -124,14 +124,18 @@
 
         try
         {
+            Logger.LogInformation("Loading pending reviews");
+
             var items = await ReviewsApi.GetPendingAsync();
             _pending.Clear();
             _pending.AddRange(items);
+
+            Logger.LogInformation("Loaded {PendingCount} pending review(s)", _pending.Count);
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to load pending reviews.";
-            Logger.LogError(exception, "Failed to load pending reviews.");
+            Logger.LogError(exception, "Failed to load pending reviews");
         }
         finally
         {
@@ -144,6 +148,7 @@
         if (_fromDate > _toDate)
         {
             _errorMessage = "From date must be earlier than or equal to to date.";
+            Logger.LogWarning("Invalid date range for review statistics: {FromDate} > {ToDate}", _fromDate, _toDate);
             return;
         }
 
@@ -155,12 +160,16 @@
             var fromUtc = new DateTimeOffset(DateTime.SpecifyKind(_fromDate, DateTimeKind.Utc));
             var toUtc = new DateTimeOffset(DateTime.SpecifyKind(_toDate.AddDays(1), DateTimeKind.Utc));
 
+            Logger.LogInformation("Loading review statistics from {FromUtc} to {ToUtc}", fromUtc, toUtc);
+
             _statistics = await ReviewsApi.GetStatisticsAsync(fromUtc, toUtc);
+
+            Logger.LogInformation("Review statistics loaded: {TotalReviews} total, {AverageRating} avg rating", _statistics.Total, _statistics.AverageRating);
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to load review statistics.";
-            Logger.LogError(exception, "Failed to load review statistics.");
+            Logger.LogError(exception, "Failed to load review statistics from {FromDate} to {ToDate}", _fromDate, _toDate);
         }
         finally
         {
@@ -175,9 +184,12 @@
 
         try
         {
+            Logger.LogInformation("Approving review {ReviewId}", id);
+
             await ReviewsApi.ApproveAsync(id);
 
             _pending.RemoveAll(item => item.Id == id);
+            Logger.LogInformation("Review {ReviewId} approved successfully", id);
             _message = "Review approved.";
 
             await LoadStatisticsAsync();
@@ -185,7 +197,7 @@
         catch (Exception exception)
         {
             _errorMessage = "Failed to approve review.";
-            Logger.LogError(exception, "Failed to approve review {ReviewId}.", id);
+            Logger.LogError(exception, "Failed to approve review {ReviewId}", id);
         }
         finally
         {

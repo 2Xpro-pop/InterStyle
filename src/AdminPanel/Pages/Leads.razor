@@ -84,6 +84,7 @@
         if (_fromDate > _toDate)
         {
             _errorMessage = "From date must be earlier than or equal to to date.";
+            Logger.LogWarning("Invalid date range for lead statistics: {FromDate} > {ToDate}", _fromDate, _toDate);
             return;
         }
 
@@ -94,12 +95,16 @@
             var fromUtc = new DateTimeOffset(DateTime.SpecifyKind(_fromDate, DateTimeKind.Utc));
             var toUtc = new DateTimeOffset(DateTime.SpecifyKind(_toDate.AddDays(1), DateTimeKind.Utc));
 
+            Logger.LogInformation("Loading lead statistics from {FromUtc} to {ToUtc}", fromUtc, toUtc);
+
             _statistics = await LeadsApi.GetStatisticsAsync(fromUtc, toUtc);
+
+            Logger.LogInformation("Lead statistics loaded: {TotalLeads} total", _statistics.Total);
         }
         catch (Exception exception)
         {
             _errorMessage = "Failed to load lead statistics.";
-            Logger.LogError(exception, "Failed to load lead statistics.");
+            Logger.LogError(exception, "Failed to load lead statistics from {FromDate} to {ToDate}", _fromDate, _toDate);
         }
         finally
         {

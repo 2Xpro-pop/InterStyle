@@ -7,11 +7,12 @@ using System.Security.Claims;
 
 namespace AdminPanel.Services;
 
-public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider, IJwtTokenSetter
+public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime, ILogger<JwtAuthenticationStateProvider> logger) : AuthenticationStateProvider, IJwtTokenSetter
 {
     private const string TokenStorageKey = "jwt_token";
 
     private readonly IJSRuntime _jsRuntime = jsRuntime;
+    private readonly ILogger<JwtAuthenticationStateProvider> _logger = logger;
     private JwtAuthenticationState? _state = null;
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -27,13 +28,15 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
         {
             token = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", TokenStorageKey);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to read JWT token from localStorage");
             return JwtAuthenticationState.NotAuthenticated;
         }
 
         if (string.IsNullOrWhiteSpace(token))
         {
+            _logger.LogDebug("No JWT token found in localStorage");
             return JwtAuthenticationState.NotAuthenticated;
         }
 
@@ -43,18 +46,21 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
         {
             jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to parse JWT token, removing from storage");
             await RemoveTokenAsync();
             return JwtAuthenticationState.NotAuthenticated;
         }
 
         if (IsExpired(jwtToken))
         {
+            _logger.LogInformation("JWT token expired at {ExpiresAtUtc}, removing from storage", jwtToken.ValidTo);
             await RemoveTokenAsync();
             return JwtAuthenticationState.NotAuthenticated;
         }
 
+        _logger.LogDebug("JWT token valid, expires at {ExpiresAtUtc}", jwtToken.ValidTo);
         return _state = new JwtAuthenticationState(jwtToken);
     }
 
@@ -63,16 +69,19 @@ public sealed class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authe
         if(remember)
         {
             await _jsRuntime.InvokeVoidAsync("localStorage.setItem", TokenStorageKey, token);
+            _logger.LogInformation("JWT token stored in localStorage, remember={RememberMe}", remember);
         }
-        
+
         var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
         _state = new JwtAuthenticationState(jwtToken);
 
+        _logger.LogInformation("Authentication state updated, token expires at {ExpiresAtUtc}", jwtToken.ValidTo);
         NotifyAuthenticationStateChanged(Task.FromResult<AuthenticationState>(_state));
     }
 
     public async Task ClearTokenAsync()
     {
+        _logger.LogInformation("Clearing authentication state and removing JWT token");
         await RemoveTokenAsync();
         NotifyAuthenticationStateChanged(Task.FromResult(JwtAuthenticationState.NotAuthenticated));
     }

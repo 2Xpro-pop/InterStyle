@@ -75,10 +75,16 @@
         _isLoading = true;
         _errorMessage = null;
 
+        using var activity = Telemetry.ActivitySource.StartActivity("HandleLogin");
+        activity?.AddTag("identity.username", _model.Login);
+
         try
         {
+            Logger.LogInformation("Login attempt for user {Username}", _model.Login);
+
             await AuthService.Login(_model.Login, _model.Password, _model.RememberMe);
 
+            Logger.LogInformation("Login succeeded for user {Username}, navigating to home", _model.Login);
             await InvokeAsync(() => Navigation.NavigateTo(""));
 
         }
@@ -86,7 +92,8 @@
         {
             _errorMessage = "An error occurred during login.";
 
-            Logger.LogDebug(exception, "An error occurred during login.");
+            activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
+            Logger.LogError(exception, "Login failed for user {Username}", _model.Login);
         }
         finally
         {

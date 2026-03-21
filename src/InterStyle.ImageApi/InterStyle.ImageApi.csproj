@@ -31,7 +31,6 @@
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
 		<PackageReference Include="RabbitMQ.Client" />
 		<PackageReference Include="SixLabors.ImageSharp" />
-		<PackageReference Include="SixLabors.ImageSharp.Web" />
 	</ItemGroup>
 
 	<ItemGroup>

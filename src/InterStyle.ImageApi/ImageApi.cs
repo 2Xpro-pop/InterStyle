@@ -13,6 +13,9 @@ public static class ImageApi
     private static readonly ActivitySource ActivitySource = new("InterStyle.ImageApi");
     public static RouteGroupBuilder MapImageApiV1(this IEndpointRouteBuilder app)
     {
+        var loggerFactory = app.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger("InterStyle.ImageApi.Endpoints");
+
         var api = app.MapGroup("api/images")
             .HasApiVersion(1.0)
             .WithTags("Images");
@@ -33,6 +36,7 @@ public static class ImageApi
                 .ToArray();
 
             activity?.AddTag("image.count", files.Length);
+            logger.LogInformation("Listed {ImageCount} images from assets", files.Length);
 
             return files;
         });
@@ -47,6 +51,9 @@ public static class ImageApi
             activity?.AddTag("image.content_type", file.ContentType);
             activity?.AddTag("image.size", file.Length);
 
+            logger.LogInformation("Upload request received for {FileName}, size {FileSize} bytes, content type {ContentType}",
+                file.FileName, file.Length, file.ContentType);
+
             await using var stream = file.OpenReadStream();
 
             var result = await handler.Handle(
@@ -54,6 +61,7 @@ public static class ImageApi
                 cancellationToken);
 
             activity?.AddTag("image.id", result.ImageId);
+            logger.LogInformation("Image uploaded with id {ImageId}", result.ImageId);
 
             return Results.Accepted($"/images/{result.ImageId}", result);
         }).DisableAntiforgery();
@@ -65,6 +73,8 @@ public static class ImageApi
         {
             using var activity = ActivitySource.StartActivity("GetImageStatus");
             activity?.AddTag("image.id", id);
+
+            logger.LogInformation("Status check for image {ImageId}", id);
 
             return Results.Ok(await handler.Handle(
                 new GetImageStatusQuery(id),
@@ -86,9 +96,11 @@ public static class ImageApi
             if (result is null)
             {
                 activity?.SetStatus(ActivityStatusCode.Error, "Image not found");
+                logger.LogWarning("Optimized image {ImageId} not found", id);
                 return Results.NotFound();
             }
 
+            logger.LogInformation("Serving optimized image {ImageId}", id);
             return Results.File(result, "image/jpeg");
         });
 

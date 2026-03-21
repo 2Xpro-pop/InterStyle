@@ -17,6 +17,15 @@ if(builder.Environment.IsDevelopment())
 
 var compose = builder.AddDockerComposeEnvironment("compose");
 
+if (builder.Environment.IsProduction())
+{
+    compose.WithDashboard(dashboard =>
+    {
+        dashboard.WithHostPort(32770)
+                 .WithForwardedHeaders(enabled: true);
+    });
+}
+
 var endpoint = builder.AddParameter("registry-endpoint");
 var repository = builder.AddParameter("registry-repository");
 #pragma warning disable ASPIRECOMPUTE003

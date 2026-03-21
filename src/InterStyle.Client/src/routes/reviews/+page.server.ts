@@ -1,4 +1,5 @@
 import { resolveReviewsService } from '$lib/ioc/reviewsServiceResolver';
+import { logger } from '$lib/logger';
 import type { IReviewsService } from '$lib/services/IReviewsService';
 import { env } from '$env/dynamic/public';
 import { fail } from '@sveltejs/kit';
@@ -6,6 +7,8 @@ import { defaultLocale, isLocale } from '$lib/i18n/locale';
 import { t } from '$lib/i18n/translations';
 
 export const prerender = false;
+
+const log = logger.child({ component: 'ReviewsPage' });
 
 async function getReviewsPageData(
 	service: IReviewsService,
@@ -78,10 +81,10 @@ export const actions = {
 		try {
 			const reviewsService = resolveReviewsService();
 			await reviewsService.submitReview(fetch, { customerName, rating, comment, captchaToken });
-			console.log(`[Reviews] Review submitted by "${customerName}"`);
+			log.info({ customerName }, 'Review submitted successfully');
 			return { success: true };
 		} catch (err) {
-			console.error('[Reviews] Submit failed:', err instanceof Error ? err.message : err);
+			log.error({ error: err instanceof Error ? err.message : String(err), customerName }, 'Review submission failed');
 			return fail(500, {
 				errors: { form: t(locale, 'validation.submitError') } as Record<string, string>,
 				customerName,

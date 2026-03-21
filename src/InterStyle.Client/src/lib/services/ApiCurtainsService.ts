@@ -1,5 +1,8 @@
 import type { ICurtainsService } from '$lib/services/ICurtainsService';
+import { logger } from '$lib/logger';
 import type { Curtain } from '$lib/types/curtain';
+
+const log = logger.child({ component: 'CurtainsApi' });
 
 interface CurtainApiDto {
 	id?: string;
@@ -34,15 +37,16 @@ export class ApiCurtainsService implements ICurtainsService {
 		if (locale) {
 			url.searchParams.set('locale', locale);
 		}
-		console.log(`[CurtainsAPI] GET ${url}`);
+		log.info({ url: url.toString(), locale }, 'Fetching curtains');
 		const response = await fetchFn(url.toString());
 		if (!response.ok) {
-			console.error(`[CurtainsAPI] ${response.status} ${response.statusText}`);
+			log.error({ url: url.toString(), status: response.status, statusText: response.statusText }, 'Curtains API request failed');
 			throw new Error('Curtains API is unavailable');
 		}
 
 		const payload = (await response.json()) as CurtainApiDto[];
-		console.log(`[CurtainsAPI] OK, ${Array.isArray(payload) ? payload.length : 0} items`);
+		const itemCount = Array.isArray(payload) ? payload.length : 0;
+		log.info({ itemCount }, 'Curtains fetched successfully');
 		if (!Array.isArray(payload) || payload.length === 0) {
 			return [];
 		}

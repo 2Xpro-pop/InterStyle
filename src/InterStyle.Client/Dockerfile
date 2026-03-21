@@ -16,5 +16,6 @@ ENV NODE_ENV=production
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY package.json ./
+COPY instrumentation.js ./
 EXPOSE 3000
-CMD ["node", "build"]
+CMD ["node", "--import", "./instrumentation.js", "build"]

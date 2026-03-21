@@ -1,5 +1,8 @@
 import type { IReviewsService } from '$lib/services/IReviewsService';
+import { logger } from '$lib/logger';
 import type { Review, ReviewPage, SubmitReviewRequest } from '$lib/types/review';
+
+const log = logger.child({ component: 'ReviewsApi' });
 
 interface ReviewApiDto {
 	id?: string;
@@ -46,16 +49,16 @@ export class ApiReviewsService implements IReviewsService {
 		const safePage = Math.max(1, page);
 		const safePageSize = Math.max(1, pageSize);
 		const reqUrl = `${this.baseUrl}/api/reviews?api-version=1.0&page=${safePage}&pageSize=${safePageSize}`;
-		console.log(`[ReviewsAPI] GET ${reqUrl}`);
+		log.info({ url: reqUrl, page: safePage, pageSize: safePageSize }, 'Fetching reviews page');
 		const response = await fetchFn(reqUrl);
 
 		if (!response.ok) {
-			console.error(`[ReviewsAPI] ${response.status} ${response.statusText}`);
+			log.error({ url: reqUrl, status: response.status, statusText: response.statusText }, 'Reviews API request failed');
 			throw new Error('Reviews API is unavailable');
 		}
 
 		const payload = (await response.json()) as PagedResultDto<ReviewApiDto>;
-		console.log(`[ReviewsAPI] OK, ${payload.items?.length ?? 0} items, total: ${payload.totalCount ?? '?'}`);
+		log.info({ itemCount: payload.items?.length ?? 0, totalCount: payload.totalCount ?? 0 }, 'Reviews page fetched successfully');
 		const items = Array.isArray(payload.items) ? payload.items : [];
 		const totalCount = typeof payload.totalCount === 'number' ? payload.totalCount : items.length;
 		const currentPage = typeof payload.page === 'number' ? payload.page : safePage;
@@ -75,7 +78,7 @@ export class ApiReviewsService implements IReviewsService {
 
 	async submitReview(fetchFn: typeof fetch, request: SubmitReviewRequest): Promise<{ id: string }> {
 		const reqUrl = `${this.baseUrl}/api/reviews?api-version=1.0`;
-		console.log(`[ReviewsAPI] POST ${reqUrl}`);
+		log.info({ url: reqUrl, customerName: request.customerName }, 'Submitting review');
 		const response = await fetchFn(reqUrl, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -83,12 +86,12 @@ export class ApiReviewsService implements IReviewsService {
 		});
 
 		if (!response.ok) {
-			console.error(`[ReviewsAPI] POST failed: ${response.status} ${response.statusText}`);
+			log.error({ url: reqUrl, status: response.status, statusText: response.statusText }, 'Review submission failed');
 			throw new Error('Не удалось отправить отзыв');
 		}
 
 		const data = await response.json();
-		console.log(`[ReviewsAPI] Review created: ${data.id ?? 'no-id'}`);
+		log.info({ reviewId: data.id ?? '' }, 'Review submitted successfully');
 		return { id: data.id ?? '' };
 	}
 }

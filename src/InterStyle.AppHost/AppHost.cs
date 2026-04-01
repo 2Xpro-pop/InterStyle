@@ -17,14 +17,16 @@ if(builder.Environment.IsDevelopment())
 
 var compose = builder.AddDockerComposeEnvironment("compose");
 
-if (builder.Environment.IsProduction())
+compose.WithDashboard(dashboard =>
 {
-    compose.WithDashboard(dashboard =>
-    {
-        dashboard.WithHostPort(32770)
-                 .WithForwardedHeaders(enabled: true);
-    });
-}
+    dashboard.WithHostPort(32770)
+             .WithForwardedHeaders(enabled: true)
+             .WithExternalHttpEndpoints()
+             .WithContainerName("dashboard");
+
+});
+
+var otlpEndpoint = "http://dashboard:18890"; //builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"];
 
 var endpoint = builder.AddParameter("registry-endpoint");
 var repository = builder.AddParameter("registry-repository");
@@ -123,6 +125,7 @@ var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
     .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey)
     .WithEnvironment("BROWSER", "none")
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", otlpEndpoint)
     .WithHttpEndpoint(targetPort:3000);
 
 if(builder.Environment.IsDevelopment() || builder.Environment.IsStaging())
@@ -137,6 +140,7 @@ if(builder.Environment.IsProduction())
 }
 
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel.GetEndpoint("http"), client.GetEndpoint("http"));
+
 
 var app = builder.Build();
 

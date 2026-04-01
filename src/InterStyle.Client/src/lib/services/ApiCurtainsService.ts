@@ -1,5 +1,6 @@
 import type { ICurtainsService } from '$lib/services/ICurtainsService';
 import { logger } from '$lib/logger';
+import { withSpan, apiCallCounter, apiCallDuration, apiCallErrorCounter } from '$lib/telemetry';
 import type { Curtain } from '$lib/types/curtain';
 
 const log = logger.child({ component: 'CurtainsApi' });
@@ -37,20 +38,39 @@ export class ApiCurtainsService implements ICurtainsService {
 		if (locale) {
 			url.searchParams.set('locale', locale);
 		}
-		log.info({ url: url.toString(), locale }, 'Fetching curtains');
-		const response = await fetchFn(url.toString());
-		if (!response.ok) {
-			log.error({ url: url.toString(), status: response.status, statusText: response.statusText }, 'Curtains API request failed');
-			throw new Error('Curtains API is unavailable');
-		}
 
-		const payload = (await response.json()) as CurtainApiDto[];
-		const itemCount = Array.isArray(payload) ? payload.length : 0;
-		log.info({ itemCount }, 'Curtains fetched successfully');
-		if (!Array.isArray(payload) || payload.length === 0) {
-			return [];
-		}
+		return withSpan('CurtainsApi.getAllCurtains', { 'api.url': url.toString(), 'api.locale': locale ?? '' }, async (span) => {
+			const start = Date.now();
+			apiCallCounter.add(1, { api: 'curtains', operation: 'getAllCurtains' });
+			log.info({ url: url.toString(), locale }, 'Fetching curtains');
 
-		return payload.map(mapApiCurtain);
+			let response: Response;
+			try {
+				response = await fetchFn(url.toString());
+			} catch (err) {
+				apiCallErrorCounter.add(1, { api: 'curtains', operation: 'getAllCurtains' });
+				apiCallDuration.record(Date.now() - start, { api: 'curtains', operation: 'getAllCurtains', status: 0 });
+				throw err;
+			}
+
+			span.setAttribute('http.status_code', response.status);
+			apiCallDuration.record(Date.now() - start, { api: 'curtains', operation: 'getAllCurtains', status: response.status });
+
+			if (!response.ok) {
+				apiCallErrorCounter.add(1, { api: 'curtains', operation: 'getAllCurtains' });
+				log.error({ url: url.toString(), status: response.status, statusText: response.statusText }, 'Curtains API request failed');
+				throw new Error('Curtains API is unavailable');
+			}
+
+			const payload = (await response.json()) as CurtainApiDto[];
+			const itemCount = Array.isArray(payload) ? payload.length : 0;
+			span.setAttribute('api.item_count', itemCount);
+			log.info({ itemCount }, 'Curtains fetched successfully');
+			if (!Array.isArray(payload) || payload.length === 0) {
+				return [];
+			}
+
+			return payload.map(mapApiCurtain);
+		});
 	}
 }

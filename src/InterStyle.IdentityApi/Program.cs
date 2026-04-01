@@ -8,7 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecksDefaults();
 
 var withApiVersioning = builder.Services.AddApiVersioning(options =>
 {
@@ -26,6 +26,8 @@ builder.Services.AddSingleUserIdentity(builder.Configuration);
 builder.Services.AddInterStyleJwtAuth(builder.Configuration);
 builder.Services.AddSingleton<JwtSigningKeyStore>();
 builder.Services.AddSingleton<JwtTokenIssuer>();
+
+builder.ConfigureOpenTelemetry("InterStyle.IdentityApi");
 
 var app = builder.Build();
 

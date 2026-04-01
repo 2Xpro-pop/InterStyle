@@ -15,8 +15,13 @@ var url = builder.HostEnvironment.GetSiteBaseAddress();
 
 builder.Services.AddLogging(logging =>
 {
+    logging.SetMinimumLevel(LogLevel.Information);
     logging.AddBrowserConsole();
 });
+
+builder.ConfigureOpenTelemetry("AdminPanel");
+
+builder.Services.AddTransient<HttpLoggingHandler>();
 
 
 builder.Services.AddAuthorizationCore();
@@ -27,21 +32,25 @@ builder.Services.AddSingleton<IAuthService, AuthService>();
 
 builder.Services.AddRefitClient<IIdentityApi>()
     .WithBaseAddress(url)
-    .AddApiV1();
+    .AddApiV1()
+    .AddHttpMessageHandler<HttpLoggingHandler>();
 
 builder.Services.AddRefitClient<ICurtainsApi>()
     .WithBaseAddress(url)
     .AddApiV1()
-    .AddJwtToken();
+    .AddJwtToken()
+    .AddHttpMessageHandler<HttpLoggingHandler>();
 
 builder.Services.AddRefitClient<ILeadsApi>()
     .WithBaseAddress(url)
     .AddApiV1()
-    .AddJwtToken();
+    .AddJwtToken()
+    .AddHttpMessageHandler<HttpLoggingHandler>();
 
 builder.Services.AddRefitClient<IReviewsApi>()
     .WithBaseAddress(url)
     .AddApiV1()
-    .AddJwtToken();
+    .AddJwtToken()
+    .AddHttpMessageHandler<HttpLoggingHandler>();
 
 await builder.Build().RunAsync();

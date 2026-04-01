@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecksDefaults();
 
 builder.Services.AddInterStyleMediatR<ApproveReviewCommand>(builder.Configuration);
 
@@ -47,6 +47,8 @@ builder.Services.AddHttpClient<ICaptchaValidator, GoogleCaptchaValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.ConfigureOpenTelemetry("InterStyle.Reviews.Api");
 
 var app = builder.Build();
 

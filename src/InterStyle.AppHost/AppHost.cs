@@ -1,4 +1,5 @@
 using InterStyle.AppHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,10 +17,24 @@ if(builder.Environment.IsDevelopment())
 
 var compose = builder.AddDockerComposeEnvironment("compose");
 
+compose.WithDashboard(dashboard =>
+{
+    dashboard.WithHostPort(32770)
+             .WithForwardedHeaders(enabled: true)
+             .WithExternalHttpEndpoints()
+             .WithContainerName("dashboard");
+
+});
+
+var otlpEndpoint = "http://dashboard:18890"; //builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"];
+
 var endpoint = builder.AddParameter("registry-endpoint");
 var repository = builder.AddParameter("registry-repository");
 #pragma warning disable ASPIRECOMPUTE003
-builder.AddContainerRegistry("container-registry", endpoint, repository);
+if(ShouldUseContainerRegistry())
+{
+    builder.AddContainerRegistry("container-registry", endpoint, repository);
+}
 #pragma warning restore ASPIRECOMPUTE003
 
 var postgres = builder.AddPostgres("postgres");
@@ -58,28 +73,33 @@ var leadsApi = builder.AddProject<Projects.InterStyle_Leads_Api>("interstyle-lea
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithReference(leadsDb).WaitFor(leadsDb)
     .WithMediatrLicense(mediatRLicenseKey)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
 var reviewsApi = builder.AddProject<Projects.InterStyle_Reviews_Api>("interstyle-reviews-api")
     .WithReference(reviewsDb).WaitFor(reviewsDb)
     .WithMediatrLicense(mediatRLicenseKey)
     .WithEnvironment("Captcha__SecretKey", captchaGoogleToken)
-    .WithReference(cache)
+    .WithReference(cache).WaitFor(cache)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
-var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi");
+var imageApi = builder.AddProject<Projects.InterStyle_ImageApi>("interstyle-imageapi")
+    .WithHttpHealthCheck("/health");
 
 var curtainsApi = builder.AddProject<Projects.InterStyle_Curtains_Api>("interstyle-curtains-api")
     .WithReference(curtainsDb).WaitFor(curtainsDb)
     .WithReference(imageApi)
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithMediatrLicense(mediatRLicenseKey)
-    .WithReference(cache)
+    .WithReference(cache).WaitFor(cache)
+    .WithHttpHealthCheck("/health")
     .WithJwtAuthority(IdentityApiUrl);
 
 var identityApi = builder.AddProject<Projects.InterStyle_IdentityApi>(IdentityApiName)
     .WithEnvironment("Admin__Username", adminLogin)
     .WithEnvironment("Admin__Password", adminPassword)
+    .WithHttpHealthCheck("/health")
     .WithPublicJwtKey(jwtPfx, jwtPfxPassword)
     .WithJwtSigningKey(jwtActiveKid, jwtPfx, jwtPfxPassword);
 
@@ -105,6 +125,7 @@ var client = builder.AddDockerfile("interstyle-client", "../InterStyle.Client")
     .WithEnvironment("PUBLIC_API_GATEWAY_URL", gateway.GetEndpoint("http"))
     .WithEnvironment("PUBLIC_RECAPTCHA_SITE_KEY", captchaGoogleSiteKey)
     .WithEnvironment("BROWSER", "none")
+    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", otlpEndpoint)
     .WithHttpEndpoint(targetPort:3000);
 
 if(builder.Environment.IsDevelopment() || builder.Environment.IsStaging())
@@ -120,4 +141,15 @@ if(builder.Environment.IsProduction())
 
 gateway.ConfigureInterStyleRoutes(leadsApi, reviewsApi, curtainsApi, imageApi, identityApi, adminPanel.GetEndpoint("http"), client.GetEndpoint("http"));
 
-builder.Build().Run();
+
+var app = builder.Build();
+
+app.Run();
+
+
+bool ShouldUseContainerRegistry()
+{
+    var useContainerRegistry = builder.Configuration.GetValue<bool?>("use-container-registry") ?? true;
+
+    return builder.Environment.IsProduction() && useContainerRegistry;
+}

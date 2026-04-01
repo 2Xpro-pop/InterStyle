@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecksDefaults();
 
 builder.Services.AddInterStyleMediatR<CreateLeadCommand>(builder.Configuration);
 
@@ -34,6 +34,8 @@ builder.Services.AddScoped<ILeadQueries, LeadQueries>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.ConfigureOpenTelemetry("InterStyle.Leads.Api");
 
 var app = builder.Build();
 
